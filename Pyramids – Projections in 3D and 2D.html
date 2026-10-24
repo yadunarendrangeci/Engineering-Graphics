@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pyramids – Projections in 3D and 2D</title>
+<style>
+:root{--bg:#fafaf7;--fg:#1c1c1a;--mut:#6b6b66;--card:#fff;--bd:#d9d8d2;--acc:#0b5fff;--red:#c2410c;--grn:#0f766e;--hp:rgba(15,118,110,.14);--vp:rgba(11,95,255,.11);box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15161a;--fg:#ececea;--mut:#9c9c96;--card:#1f2026;--bd:#383a42;--acc:#6ea0ff;--red:#fb923c;--grn:#5eead4;--hp:rgba(94,234,212,.13);--vp:rgba(110,160,255,.13)}}
+:root[data-theme="dark"]{--bg:#15161a;--fg:#ececea;--mut:#9c9c96;--card:#1f2026;--bd:#383a42;--acc:#6ea0ff;--red:#fb923c;--grn:#5eead4;--hp:rgba(94,234,212,.13);--vp:rgba(110,160,255,.13)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;padding:12px;background:var(--bg);color:var(--fg);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:1400px;margin:0 auto}
+h1{font-size:19px;margin:4px 0 2px}.sub{color:var(--mut);font-size:13px;margin:0 0 8px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:12px;margin:10px 0}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.tabs button{flex:1 1 130px;padding:8px;border:1px solid var(--bd);background:transparent;color:var(--fg);border-radius:8px;font:inherit;cursor:pointer}
+.tabs button.on{background:var(--acc);border-color:var(--acc);color:#fff}
+.row{display:flex;flex-wrap:wrap;gap:6px 18px;align-items:center;margin:6px 0;font-size:14px}
+.row label{display:flex;align-items:center;gap:6px}
+input[type=range]{width:150px}input[type=number]{width:58px}
+select,input[type=number]{font:inherit;padding:2px 4px;background:var(--bg);color:var(--fg);border:1px solid var(--bd);border-radius:6px}
+.dis{opacity:.4}
+canvas{display:block;width:100%;touch-action:none}
+.sw{display:inline-flex;align-items:center;gap:5px;margin:6px 12px 0 0;font-size:13px}.sw i{width:14px;height:14px;border-radius:3px;border:1px solid var(--fg);display:inline-block}
+.panes{display:grid;grid-template-columns:1fr 1fr;gap:10px}.panes .card{min-width:0}@media(max-width:820px){.panes{grid-template-columns:1fr}}
+.vbtn{padding:5px 10px;border:1px solid var(--bd);background:transparent;color:var(--fg);border-radius:7px;font:13px inherit;cursor:pointer}
+.vbtn:active{background:var(--acc);border-color:var(--acc);color:#fff}
+.cap{font-size:12.5px;color:var(--mut);margin:6px 0 0}
+#info{font-size:14px}
+fieldset{border:1px solid var(--bd);border-radius:8px;padding:8px 10px;margin:6px 0}
+legend{font-size:12.5px;color:var(--mut);padding:0 4px}
+</style></head><body><main>
+<h1>Pyramids – three stages of projection</h1>
+<p class="sub">Square, pentagonal and hexagonal pyramid only. Read the 2D drawing (left) together with the 3D view (right).</p>
+
+<div class="card">
+ <div class="tabs" id="types">
+  <button data-t="pyr4">Square pyramid</button><button data-t="pyr5">Pentagonal pyramid</button><button data-t="pyr6">Hexagonal pyramid</button>
+ </div>
+ <div class="tabs" id="tabs">
+  <button data-s="1">Stage 1</button><button data-s="2">Stage 2</button><button data-s="3">Stage 3</button>
+ </div>
+ <div class="row">
+  <label>Base side <input id="s" type="number" min="10" max="80" value="35"></label>
+  <label>Axis <input id="h" type="number" min="20" max="120" value="60"></label>
+ </div>
+
+ <fieldset id="fsRest"><legend>Stage 2 — how the base meets HP</legend>
+  <div class="row">
+   <label><input type="radio" name="rest" id="restEdge" value="edge"> Base edge fixed on HP</label>
+   <label><input type="radio" name="rest" id="restCorner" value="corner"> Base corner fixed on HP</label>
+   <label><input type="radio" name="rest" id="restHeight" value="height"> Neither — nearest point is
+    <input id="heightMM" type="number" min="0" max="100" value="20"> mm above HP</label>
+   <label><input type="radio" name="rest" id="restFace" value="face"> One triangular face lying flat on HP</label>
+  </div>
+ </fieldset>
+
+ <fieldset id="fsTheta"><legend>Stage 2 — tilt angle</legend>
+  <div class="row">
+   <label><input type="radio" name="thb" id="thAxis" value="axis"> Angle of axis with HP</label>
+   <label><input type="radio" name="thb" id="thEdge" value="edge"> Angle of a slant edge (apex–resting corner) with HP</label>
+   <input id="theta" type="range" min="0" max="90" value="45"> <b id="thetav">45°</b>
+  </div>
+ </fieldset>
+
+ <fieldset id="fsAlpha"><legend>Stage 3 — turn about the vertical</legend>
+  <div class="row">
+   <label>Top view of axis ∠ VP (α) <input id="alpha" type="range" min="0" max="90" value="30"> <b id="alphav">30°</b></label>
+   <label><input type="radio" name="twd" id="twdTo" value="1"> Apex plan towards XY line</label>
+   <label><input type="radio" name="twd" id="twdAway" value="0"> Apex plan away from XY line</label>
+   <label><input type="radio" name="side" id="sideR" value="1"> Apex points right</label>
+   <label><input type="radio" name="side" id="sideL" value="0"> Apex points left</label>
+  </div>
+ </fieldset>
+
+ <div class="row">
+  <label>Fold HP into VP plane <input id="fold" type="range" min="0" max="90" value="0"></label>
+  <label><input id="proj" type="checkbox" checked> Projectors</label>
+  <label>Face opacity <input id="op" type="range" min="0" max="100" value="45"> <b id="opv">45%</b></label>
+  <label>Point label size <input id="fs" type="range" min="10" max="30" value="14"> <b id="fsv">14px</b></label>
+  <label>3D label colour <select id="lblCol"><option value="#000000">Black</option><option value="#ffffff">White</option></select></label>
+  <label>3D label size <input id="fs3d" type="range" min="10" max="30" value="14"> <b id="fs3dv">14px</b></label>
+  <label><input id="all" type="checkbox"> All stages in 2D</label>
+ </div>
+</div>
+
+<div class="card" id="info"></div>
+
+<div class="panes">
+<div class="card"><canvas id="c2"></canvas>
+<p class="cap">2D: front view above XY, top view below. Dashed lines are hidden. Hidden points are written in ( ): a′(d′) means a′ is visible and d′ lies directly behind it.</p></div>
+<div class="card">
+ <div class="row" style="margin-top:0">
+  <span style="color:var(--mut);font-size:13px">Quick view:</span>
+  <button class="vbtn" id="vFront" type="button">Front (VP)</button>
+  <button class="vbtn" id="vTop" type="button">Top (HP)</button>
+  <button class="vbtn" id="vIso" type="button">Isometric</button>
+ </div>
+ <canvas id="c3"></canvas>
+ <div id="leg"></div>
+ <p class="cap">3D: drag to rotate. Face opacity: 0% is a see-through wire model, 100% is solid. Teal plane = HP, blue plane = VP.</p></div>
+</div>
+</main>
+<script>
+const $=id=>document.getElementById(id),rad=d=>d*Math.PI/180;
+const TY={pyr4:{n:4,nm:'Square pyramid'},pyr5:{n:5,nm:'Pentagonal pyramid'},pyr6:{n:6,nm:'Hexagonal pyramid'}};
+const FCOL=['#e11d48','#2563eb','#16a34a','#f59e0b','#9333ea','#0891b2','#db2777','#65a30d'],LT='abcdefghijkl';
+const S={type:'pyr4',stage:1,restMode:'edge',heightMM:20,thBasis:'axis',theta:45,alpha:30,towardXY:true,apexRight:true,s:35,h:60,fold:0,all:false,proj:true,op:45,fs:14,fs3d:14,lblCol:'#000000',yaw:.55,pit:.42};
+function faceAngle(){ // dihedral angle of a triangular face with the base, for restMode==='face'
+ const T=TY[S.type],R=S.s/(2*Math.sin(Math.PI/T.n)),apoth=R*Math.cos(Math.PI/T.n);
+ return 90-Math.atan(S.h/apoth)*180/Math.PI;
+}
+const sub=(a,b)=>a.map((v,i)=>v-b[i]),dot=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
+let M;
+
+/* ---------- topology ---------- */
+function topo(){
+ const T=TY[S.type],N=T.n;
+ const F=[[...Array(N).keys()]],fc=[0]; // base face
+ for(let k=0;k<N;k++){const k1=(k+1)%N;F.push([k,k1,N]);fc.push(1+k)} // side faces, apex=index N
+ const ap=N,c1=N+1;
+ const bn=k=>LT[k];
+ const leg=[{c:0,t:'Base  '+[...Array(N).keys()].map(bn).join(' ')}];
+ for(let k=0;k<N;k++){const k1=(k+1)%N;leg.push({c:1+k,t:'Side  o '+bn(k)+' '+bn(k1)})}
+ const m={};F.forEach((f,i)=>f.forEach((a,j)=>{const b=f[(j+1)%f.length],lo=Math.min(a,b),hi=Math.max(a,b),key=lo+'-'+hi;(m[key]=m[key]||{a:lo,b:hi,f:[]}).f.push(i)}));
+ const E=Object.values(m);
+ const lab=[...Array(N).keys()].map(k=>({i:k,n:bn(k)}));
+ lab.push({i:ap,n:'o'});lab.push({i:c1,n:'o1'});
+ const vf=lab.map(l=>F.reduce((a,f,j)=>(f.includes(l.i)&&a.push(j),a),[]));
+ M={round:false,N,face:false,F,fc,leg,E,lab,vf,ap,c1,c:-1,s0:1,ax0:c1,ax1:ap};
+}
+
+/* ---------- geometry ---------- */
+const FIT=(P,zFloor)=>{const m=12,a=Math.min(...P.map(p=>p[0])),b=Math.min(...P.map(p=>p[1])),z=Math.min(...P.map(p=>p[2]));
+ return P.map(p=>[p[0]-a,p[1]-b+m,p[2]-z+zFloor])};
+function pivotOff(T){return(S.restMode==='edge'||S.restMode==='face'||(S.restMode==='height'&&S.thBasis==='edge'))?Math.PI/T.n:0}
+function stages(){
+ const T=TY[S.type],N=T.n,s=S.s,h=S.h,R=s/(2*Math.sin(Math.PI/N));
+ const off=pivotOff(T);
+ const base=[...Array(N)].map((_,k)=>{const a=off+k*2*Math.PI/N;return[R*Math.cos(a),R*Math.sin(a)]});
+ const P0=base.map(p=>[p[0],p[1],0]);P0.push([0,0,h]);P0.push([0,0,0]);
+ const px=Math.max(...base.map(p=>p[0]));
+ // --- stage 2 tilt angle ---
+ let phi;
+ if(S.restMode==='face'){phi=rad(90+faceAngle())}
+ else if(S.restMode==='corner'||S.thBasis==='axis'){phi=rad(90-S.theta)}
+ else{ // 'edge' basis: the resting base edge is, by construction, always exactly flat on HP
+  // (that is what "resting on it" means), so its own angle to HP can't be set — it's always 0.
+  // The adjustable alternative is the SLANT edge from that resting point up to the apex.
+  const xs=base.map((p,i)=>({i,x:p[0]})).sort((a,b)=>b.x-a.x);
+  const p1=base[xs[0].i],py1=p1[1],A=px,B=h,dirlen=Math.hypot(px,py1,h);
+  const R=Math.hypot(A,B),delta=Math.atan2(B,A);
+  const Ctarget=Math.sin(rad(S.theta))*dirlen;
+  const v=Math.min(1,Math.max(-1,Ctarget/R));
+  const norm=a=>{while(a>Math.PI)a-=2*Math.PI;while(a<-Math.PI)a+=2*Math.PI;return a};
+  const c1=norm(Math.asin(v)-delta),c2=norm(Math.PI-Math.asin(v)-delta),ok=x=>x>=-1e-6&&x<=Math.PI/2+1e-6;
+  phi=ok(c1)?c1:ok(c2)?c2:Math.max(0,Math.min(Math.PI/2,c1));
+ }
+ const c=Math.cos(phi),n=Math.sin(phi); // apex always tips toward +X (right) in stage 2
+ const R2=P0.map(([x,y,z])=>{const d=x-px;return[px+d*c+z*n,y,-d*n+z*c]});
+ const H=S.restMode==='height'?S.heightMM:0;
+ // --- stage 3 turn ---
+ const b=rad(S.alpha),sg1=S.towardXY?-1:1;
+ const cb=Math.cos(b),sb=Math.sin(b)*sg1;
+ let R3=R2.map(([x,y,z])=>[x*cb-y*sb,x*sb+y*cb,z]);
+ if(!S.apexRight)R3=R3.map(([x,y,z])=>[-x,y,z]);
+ return[FIT(P0,0),FIT(R2,H),FIT(R3,H)];
+}
+function normals(P){
+ const c=[0,1,2].map(i=>(P[M.ax0][i]+P[M.ax1][i])/2);
+ return M.F.map(f=>{let n=[0,0,0],mid=[0,0,0];const L=f.length;
+  f.forEach((a,j)=>{const A=P[a],B=P[f[(j+1)%L]];n[0]+=(A[1]-B[1])*(A[2]+B[2]);n[1]+=(A[2]-B[2])*(A[0]+B[0]);n[2]+=(A[0]-B[0])*(A[1]+B[1]);for(let i=0;i<3;i++)mid[i]+=A[i]/L});
+  if(dot(n,sub(mid,c))<0)n=n.map(v=>-v);const l=Math.hypot(...n)||1;return n.map(v=>v/l)});
+}
+function edgeSpec(NR,ax){return M.E.map(e=>({a:e.a,b:e.b,vis:Math.max(...e.f.map(i=>NR[i][ax]))>1e-6,w:1.8}))}
+const visV=(NR,ax)=>M.lab.map((l,j)=>l.i===M.c1?NR[0][ax]>-1e-6:M.vf[j].some(f=>NR[f][ax]>1e-6));
+
+/* ---------- drawing helpers ---------- */
+function pal(){const s=getComputedStyle(document.documentElement),v=n=>s.getPropertyValue(n).trim();return{fg:v('--fg'),mut:v('--mut'),acc:v('--acc'),red:v('--red'),grn:v('--grn'),hp:v('--hp'),vp:v('--vp')}}
+function fit(cv,r){const w=Math.max(280,cv.parentElement.clientWidth-24),h=Math.round(w*r),d=window.devicePixelRatio||1;
+ cv.width=w*d;cv.height=h*d;cv.style.width=w+'px';cv.style.height=h+'px';
+ const g=cv.getContext('2d');g.setTransform(d,0,0,d,0,0);g.font='13px system-ui,sans-serif';return[w,h,g]}
+function drawEdges(g,P,f,col,spec){
+ [false,true].forEach(v=>{g.setLineDash(v?[]:[5,4]);g.strokeStyle=col;g.lineWidth=1.8;g.beginPath();let any=0;
+  spec.forEach(e=>{if(e.vis===v){any=1;const a=f(P[e.a]),b=f(P[e.b]);g.moveTo(a[0],a[1]);g.lineTo(b[0],b[1])}});if(any)g.stroke()});g.setLineDash([])}
+function axisLn(g,P,f,col){const a=f(P[M.ax0]),b=f(P[M.ax1]);g.setLineDash([9,3,2,3]);g.strokeStyle=col;g.lineWidth=1;g.beginPath();g.moveTo(a[0],a[1]);g.lineTo(b[0],b[1]);g.stroke();g.setLineDash([])}
+function poly(g,pts,fill,stroke){g.beginPath();pts.forEach((p,i)=>i?g.lineTo(p[0],p[1]):g.moveTo(p[0],p[1]));g.closePath();g.fillStyle=fill;g.fill();g.strokeStyle=stroke;g.lineWidth=1;g.stroke()}
+function labels(g,pt,suffix,col,vis){
+ const pts=M.lab.map(l=>pt(l.i)),cen=[0,1].map(k=>pts.reduce((s,p)=>s+p[k],0)/pts.length),grp={},f=S.fs;
+ M.lab.forEach((l,j)=>{const p=pts[j],key=Math.round(p[0]/3)+','+Math.round(p[1]/3),o=(grp[key]=grp[key]||{p,v:[],h:[]});(vis[j]?o.v:o.h).push(l.n+suffix)});
+ g.fillStyle=col;g.textAlign='center';g.font=f+'px system-ui,sans-serif';
+ Object.values(grp).forEach(o=>{const dx=o.p[0]-cen[0],dy=o.p[1]-cen[1],l=Math.hypot(dx,dy)||1;
+  const t=o.v.join(',')+(o.h.length?'('+o.h.join(',')+')':'');
+  g.fillText(t,o.p[0]+dx/l*(f+3),o.p[1]+dy/l*f+f*.3)});
+}
+
+/* ---------- 2D ---------- */
+function draw2D(){
+ const[W,H,g]=fit($('c2'),.8),c=pal(),st=stages(),list=S.all?[0,1,2]:[S.stage-1];
+ let off=0;const it=list.map(i=>{const P=st[i],a=Math.min(...P.map(p=>p[0])),b=Math.max(...P.map(p=>p[0]));const o={i,P,dx:off-a,a,b};off+=b-a+28;return o});
+ const tot=off-28,zm=Math.max(...it.flatMap(o=>o.P.map(p=>p[2]))),ym=Math.max(...it.flatMap(o=>o.P.map(p=>p[1])));
+ const pad=28+S.fs*1.5,avail=H-2*pad-14,k=Math.min((W-2*pad)/tot,avail/(zm+ym),6),x0=(W-k*tot)/2,y0=pad+(avail-k*(zm+ym))/2+k*zm;
+ g.strokeStyle=c.fg;g.lineWidth=1.4;g.beginPath();g.moveTo(8,y0);g.lineTo(W-8,y0);g.stroke();
+ g.fillStyle=c.fg;g.font='bold 14px system-ui,sans-serif';g.textAlign='left';g.fillText('X',10,y0-6);g.textAlign='right';g.fillText('Y',W-10,y0-6);
+ g.font='12px system-ui,sans-serif';g.fillStyle=c.mut;g.textAlign='left';g.fillText('VP · front view',10,y0-20);g.fillText('HP · top view',10,y0+18);
+ it.forEach(o=>{
+  const P=o.P,NR=normals(P),FX=p=>x0+k*(p[0]+o.dx),fv=p=>[FX(p),y0-k*p[2]],tv=p=>[FX(p),y0+k*p[1]];
+  if(S.proj){g.setLineDash([2,3]);g.strokeStyle=c.mut;g.lineWidth=.6;g.beginPath();M.lab.forEach(l=>{const p=P[l.i];g.moveTo(fv(p)[0],fv(p)[1]);g.lineTo(tv(p)[0],tv(p)[1])});g.stroke();g.setLineDash([])}
+  drawEdges(g,P,fv,c.acc,edgeSpec(NR,1));axisLn(g,P,fv,c.acc);
+  drawEdges(g,P,tv,c.grn,edgeSpec(NR,2));axisLn(g,P,tv,c.grn);
+  labels(g,i=>fv(P[i]),"′",c.acc,visV(NR,1));labels(g,i=>tv(P[i]),'',c.grn,visV(NR,2));
+  g.fillStyle=c.fg;g.textAlign='center';g.font='bold 13px system-ui,sans-serif';g.fillText('Stage '+(o.i+1),x0+k*((o.a+o.b)/2+o.dx),H-8);
+ });
+}
+
+/* ---------- 3D ---------- */
+function draw3D(){
+ const[W,H,g]=fit($('c3'),.8),c=pal(),P=stages()[S.stage-1];
+ const x0=Math.min(...P.map(p=>p[0]))-30,x1=Math.max(...P.map(p=>p[0]))+30,ZH=Math.max(...P.map(p=>p[2]))+30,YD=Math.max(...P.map(p=>p[1]))+30;
+ const cy=Math.cos(S.yaw),sy=Math.sin(S.yaw),cp=Math.cos(S.pit),sp=Math.sin(S.pit),ct=Math.cos(rad(S.fold)),st=Math.sin(rad(S.fold));
+ const L=Math.hypot(x1-x0,YD,ZH)*(1+S.fold/300),k=Math.min(W,H)*.95/L,xc=(x0+x1)/2,zc=(ZH-YD*st)/2,yc=YD*ct/2;
+ const pr=([x,y,z])=>{const X=x-xc,Yv=z-zc,Zv=y-yc,X1=X*cy+Zv*sy,Z1=-X*sy+Zv*cy,Y2=Yv*cp-Z1*sp,Z2=Yv*sp+Z1*cp;return[W/2+k*X1,H/2-k*Y2,Z2]};
+ const hp=(x,y)=>[x,y*ct,-y*st];
+ poly(g,[[x0,0,0],[x1,0,0],[x1,0,ZH],[x0,0,ZH]].map(pr),c.vp,c.acc);
+ poly(g,[hp(x0,0),hp(x1,0),hp(x1,YD),hp(x0,YD)].map(pr),c.hp,c.grn);
+ g.strokeStyle=c.fg;g.lineWidth=1.6;g.beginPath();const a=pr([x0,0,0]),b=pr([x1,0,0]);g.moveTo(a[0],a[1]);g.lineTo(b[0],b[1]);g.stroke();
+ g.font='bold 13px system-ui,sans-serif';g.fillStyle=c.acc;g.textAlign='left';let q=pr([x0,0,ZH]);g.fillText('VP',q[0]+4,q[1]+14);
+ g.fillStyle=c.grn;q=pr(hp(x0,YD));g.fillText('HP',q[0]+4,q[1]-6);g.fillStyle=c.fg;
+ let qx=pr([x0,0,0]);g.textAlign='right';g.fillText('X',qx[0]-6,qx[1]-5);
+ let qy=pr([x1,0,0]);g.textAlign='left';g.fillText('Y',qy[0]+6,qy[1]-5);
+ const NR=normals(P),fvp=p=>pr([p[0],0,p[2]]),tvp=p=>pr(hp(p[0],p[1]));
+ if(S.proj){g.setLineDash([2,3]);g.strokeStyle=c.mut;g.lineWidth=.7;g.beginPath();
+  M.lab.forEach(l=>{const p=P[l.i],v=pr(p),f=fvp(p),t=tvp(p);
+   if(S.fold===0){g.moveTo(v[0],v[1]);g.lineTo(f[0],f[1]);g.moveTo(v[0],v[1]);g.lineTo(t[0],t[1])}
+   else{g.moveTo(f[0],f[1]);g.lineTo(t[0],t[1])}});g.stroke();g.setLineDash([])}
+ drawEdges(g,P,fvp,c.acc,edgeSpec(NR,1));drawEdges(g,P,tvp,c.grn,edgeSpec(NR,2));
+ axisLn(g,P,fvp,c.acc);axisLn(g,P,tvp,c.grn);
+ const pp=P.map(pr);
+ M.F.map((f,i)=>({f,i,z:f.reduce((s,j)=>s+pp[j][2],0)/f.length})).sort((u,v)=>u.z-v.z).forEach(o=>{
+  g.beginPath();o.f.forEach((j,n)=>n?g.lineTo(pp[j][0],pp[j][1]):g.moveTo(pp[j][0],pp[j][1]));g.closePath();
+  g.globalAlpha=S.op/100;g.fillStyle=FCOL[M.fc[o.i]%8];g.fill();g.globalAlpha=1;
+  g.strokeStyle=c.fg;g.lineWidth=1.6;g.stroke();
+ });
+ axisLn(g,P,pr,c.red);
+ g.fillStyle=S.lblCol;g.textAlign='center';g.font=S.fs3d+'px system-ui,sans-serif';
+ M.lab.forEach(l=>g.fillText(l.n,pp[l.i][0]+S.fs3d*.7,pp[l.i][1]-S.fs3d*.45));
+}
+
+/* ---------- UI ---------- */
+function info(){
+ const T=TY[S.type],t=S.stage,h=S.h,last=LT[T.n-1];
+ const rest={edge:`base edge a${last}`,corner:'base corner a',height:`the nearest point, held ${S.heightMM} mm above HP`,face:'a full triangular face o-a-'+last}[S.restMode];
+ const st1=`<b>Stage 1 – ${T.nm} standing on its base on HP</b>, oriented so that ${S.restMode==='corner'?'corner a points to the right':'base edge a'+last+' is ⟂ VP'}. Top view is the true shape of the base; front view shows the true axis length (${h} mm).`;
+ let thLabel;
+ if(S.restMode==='face')thLabel=`axis is fixed at ${faceAngle().toFixed(1)}° to HP — tipping until a whole triangular face lies flat on HP sets this automatically; no angle to choose`;
+ else if(S.thBasis==='edge'&&S.restMode!=='corner')thLabel=`slant edge o-a makes ${S.theta}° with HP (note: the resting base edge itself always stays at 0°, by definition of resting on it)`;
+ else thLabel=`axis makes ${S.theta}° with HP`;
+ const st2=`<b>Stage 2 – tipped so the ${thLabel}</b>, resting on ${rest}. Top view y-distances unchanged, x-lengths change; front view re-projected.`;
+ const st3=`<b>Stage 3 – turned about a vertical line so the top view of the axis makes α = ${S.alpha}° with VP</b>, apex plan ${S.towardXY?'swung towards':'swung away from'} the XY line, and the figure drawn with the apex pointing ${S.apexRight?'right':'left'}.`;
+ return[st1,st2,st3][t-1];
+}
+function render(){
+ topo();
+ document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',+b.dataset.s===S.stage));
+ document.querySelectorAll('#types button').forEach(b=>b.classList.toggle('on',b.dataset.t===S.type));
+ $('restEdge').checked=S.restMode==='edge';$('restCorner').checked=S.restMode==='corner';$('restHeight').checked=S.restMode==='height';$('restFace').checked=S.restMode==='face';
+ $('heightMM').disabled=S.restMode!=='height';$('heightMM').value=S.heightMM;
+ const cornerFixed=S.restMode==='corner',faceFixed=S.restMode==='face';
+ $('thEdge').disabled=cornerFixed||faceFixed;if(cornerFixed){S.thBasis='axis'}
+ $('thAxis').disabled=faceFixed;$('thAxis').checked=S.thBasis==='axis';$('thEdge').checked=S.thBasis==='edge';
+ $('theta').disabled=S.stage<2||faceFixed;
+ $('thetav').textContent=faceFixed?faceAngle().toFixed(1)+'° (auto)':S.theta+'°';$('theta').value=faceFixed?Math.round(faceAngle()):S.theta;
+ $('alphav').textContent=S.alpha+'°';$('alpha').value=S.alpha;
+ $('twdTo').checked=S.towardXY;$('twdAway').checked=!S.towardXY;
+ $('sideR').checked=S.apexRight;$('sideL').checked=!S.apexRight;
+ $('fsTheta').classList.toggle('dis',S.stage<2||faceFixed);
+ $('fsRest').classList.toggle('dis',S.stage<2);
+ $('lblCol').value=S.lblCol;$('fs3d').value=S.fs3d;$('fs3dv').textContent=S.fs3d+'px';
+ $('fsAlpha').classList.toggle('dis',S.stage<3);
+ ['alpha','twdTo','twdAway','sideR','sideL'].forEach(id=>$(id).disabled=S.stage<3);
+ $('leg').innerHTML=M.leg.map(o=>`<span class="sw"><i style="background:${FCOL[o.c%8]}"></i>${o.t}</span>`).join('');
+ $('info').innerHTML=info();
+ draw3D();draw2D();
+}
+function setType(t){S.type=t;render()}
+document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>{S.stage=+b.dataset.s;render()});
+document.querySelectorAll('#types button').forEach(b=>b.onclick=()=>setType(b.dataset.t));
+document.querySelectorAll('input[name=rest]').forEach(r=>r.onchange=()=>{S.restMode=r.value;render()});
+document.querySelectorAll('input[name=thb]').forEach(r=>r.onchange=()=>{S.thBasis=r.value;render()});
+document.querySelectorAll('input[name=twd]').forEach(r=>r.onchange=()=>{S.towardXY=r.value==='1';render()});
+document.querySelectorAll('input[name=side]').forEach(r=>r.onchange=()=>{S.apexRight=r.value==='1';render()});
+$('heightMM').onchange=e=>{S.heightMM=Math.max(0,Math.min(100,+e.target.value||0));render()};
+$('lblCol').onchange=e=>{S.lblCol=e.target.value;draw3D()};
+$('fs3d').oninput=e=>{S.fs3d=+e.target.value;$('fs3dv').textContent=S.fs3d+'px';draw3D()};
+$('theta').oninput=e=>{S.theta=+e.target.value;render()};
+$('alpha').oninput=e=>{S.alpha=+e.target.value;render()};
+$('fold').oninput=e=>{S.fold=+e.target.value;render()};
+$('proj').onchange=e=>{S.proj=e.target.checked;render()};
+$('op').oninput=e=>{S.op=+e.target.value;$('opv').textContent=S.op+'%';draw3D()};
+$('fs').oninput=e=>{S.fs=+e.target.value;$('fsv').textContent=S.fs+'px';draw3D();draw2D()};
+$('all').onchange=e=>{S.all=e.target.checked;render()};
+['s','h'].forEach(id=>$(id).onchange=e=>{const el=e.target,v=Math.min(+el.max,Math.max(+el.min,+el.value||+el.min));el.value=v;S[id]=v;render()});
+let dr=null;const c3=$('c3');
+c3.onpointerdown=e=>{dr=[e.clientX,e.clientY];c3.setPointerCapture(e.pointerId)};
+c3.onpointermove=e=>{if(!dr)return;S.yaw+=(e.clientX-dr[0])*.01;S.pit=Math.max(-1.55,Math.min(1.55,S.pit+(e.clientY-dr[1])*.01));dr=[e.clientX,e.clientY];draw3D()};
+c3.onpointerup=c3.onpointercancel=()=>dr=null;
+$('vFront').onclick=()=>{S.yaw=0;S.pit=0;draw3D()};
+$('vTop').onclick=()=>{S.yaw=0;S.pit=Math.PI/2;draw3D()};
+$('vIso').onclick=()=>{S.yaw=.55;S.pit=.42;draw3D()};
+addEventListener('resize',render);
+matchMedia('(prefers-color-scheme:dark)').addEventListener('change',render);
+setType('pyr4');
+</script></body></html>
