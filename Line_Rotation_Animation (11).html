@@ -1,0 +1,1145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rotation Method: Line Inclined to HP &amp; VP</title>
+<style>
+    :root {
+        --bg-color: #0f172a;
+        --panel-bg: #1e293b;
+        --panel-border: #334155;
+        --text-main: #f8fafc;
+        --text-muted: #94a3b8;
+        --accent: #38bdf8;
+        --accent-hover: #0ea5e9;
+        --a-start: #34d399;
+        --a-live: #fbbf24;
+        --b-start: #60a5fa;
+        --b-live: #a78bfa;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background: var(--bg-color); color: var(--text-main); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+    header { background: var(--panel-bg); border-bottom: 1px solid var(--panel-border); padding: 10px 24px; display: flex; justify-content: space-between; align-items: center; }
+    h1 { font-size: 1.05rem; font-weight: 600; }
+    .sub { font-size: 0.75rem; color: var(--text-muted); }
+    .main-container { display: grid; grid-template-columns: 330px 1fr; flex: 1; overflow: hidden; }
+
+    .control-panel { background: var(--panel-bg); border-right: 1px solid var(--panel-border); padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; }
+    .section-group { display: flex; flex-direction: column; gap: 8px; }
+    .subgroup { display: flex; flex-direction: column; gap: 8px; }
+    .section-title { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--accent); border-bottom: 1px solid var(--panel-border); padding-bottom: 4px; }
+    .hint { font-size: 0.7rem; color: var(--text-muted); line-height: 1.4; }
+
+    .field-row { display: flex; align-items: center; gap: 8px; font-size: 0.8rem; }
+    .field-row label { flex: 1; color: var(--text-muted); }
+    .field-row input[type=number] { width: 62px; background: var(--bg-color); border: 1px solid var(--panel-border); color: var(--text-main); padding: 4px 6px; border-radius: 4px; text-align: right; }
+    .field-row input[type=color] { width: 42px; height: 26px; padding: 2px; background: var(--bg-color); border: 1px solid var(--panel-border); border-radius: 4px; cursor: pointer; }
+    .field-row .unit { width: 20px; color: var(--text-muted); font-size: 0.7rem; }
+
+    .radio-group { display: flex; flex-direction: column; gap: 6px; }
+    .radio-btn { padding: 7px 8px; background: var(--bg-color); border: 1px solid var(--panel-border); border-radius: 6px; color: var(--text-muted); text-align: left; cursor: pointer; font-size: 0.78rem; transition: all 0.15s; }
+    .radio-btn.active { background: rgba(56,189,248,0.15); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+
+    .quadrant-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+    .quad-btn { padding: 8px 6px; background: var(--bg-color); border: 1px solid var(--panel-border); border-radius: 6px; color: var(--text-muted); cursor: pointer; font-size: 0.8rem; font-weight: 700; text-align: center; line-height: 1.3; }
+    .quad-btn .quad-sub { display: block; font-size: 0.62rem; font-weight: 400; color: var(--text-muted); margin-top: 2px; }
+    .quad-btn.active { background: rgba(56,189,248,0.15); border-color: var(--accent); color: var(--accent); }
+    .quad-btn.active .quad-sub { color: var(--accent); }
+
+    .btn-row { display: flex; gap: 8px; }
+    .btn { flex: 1; padding: 8px; background: var(--bg-color); border: 1px solid var(--panel-border); border-radius: 6px; color: var(--text-main); text-align: center; cursor: pointer; font-size: 0.82rem; font-weight: 500; }
+    .btn:hover { border-color: var(--accent); color: var(--accent); }
+    .btn.primary { background: var(--accent); color: var(--bg-color); border-color: var(--accent); font-weight: 700; }
+    .btn.primary:hover { background: var(--accent-hover); color: var(--bg-color); }
+
+    input[type=range] { width: 100%; accent-color: var(--accent); }
+
+    .readout { background: var(--bg-color); border: 1px solid var(--panel-border); border-radius: 8px; padding: 9px; font-size: 0.76rem; display: flex; flex-direction: column; gap: 4px; }
+    .readout .title { font-weight: 700; font-size: 0.72rem; margin-bottom: 2px; }
+    .readout .row { display: flex; justify-content: space-between; }
+    .readout .row .k { color: var(--text-muted); }
+    .readout .row .v { font-variant-numeric: tabular-nums; font-weight: 600; }
+
+    .warn { display: none; background: rgba(248,113,113,0.15); border: 1px solid #f87171; color: #fecaca; padding: 6px 8px; border-radius: 6px; font-size: 0.68rem; line-height: 1.35; white-space: pre-line; }
+
+    .legend { font-size: 0.7rem; color: var(--text-muted); display: flex; flex-direction: column; gap: 3px; }
+    .legend .sw { display: inline-block; width: 12px; height: 3px; margin-right: 6px; vertical-align: middle; }
+    .legend .grp-title { color: var(--text-main); font-weight: 600; margin-top: 4px; }
+
+    .view-area { display: flex; flex-direction: column; overflow: hidden; }
+    .pane3d { position: relative; flex: 1; overflow: hidden; }
+    #canvas3d-container { width: 100%; height: 100%; }
+    #labels3d { position: absolute; inset: 0; pointer-events: none; z-index: 5; }
+    .label3d { position: absolute; font-size: 12px; font-weight: 600; font-family: system-ui, sans-serif; transform: translate(-50%, -50%); white-space: nowrap; text-shadow: 0 0 4px rgba(15,23,42,0.95), 0 0 4px rgba(15,23,42,0.95), 0 0 2px rgba(15,23,42,0.95); }
+    .pane-header { position: absolute; top: 10px; left: 14px; z-index: 10; background: rgba(30,41,59,0.85); backdrop-filter: blur(4px); border: 1px solid var(--panel-border); padding: 5px 9px; border-radius: 6px; font-size: 0.76rem; font-weight: 500; }
+
+    .strip-row { display: flex; height: 250px; border-top: 1px solid var(--panel-border); flex-shrink: 0; }
+    .strip { flex: 1; position: relative; background: var(--bg-color); min-width: 0; }
+    .strip:not(:last-child) { border-right: 1px solid var(--panel-border); }
+    .resizer { height: 7px; flex-shrink: 0; background: var(--panel-bg); border-top: 1px solid var(--panel-border); border-bottom: 1px solid var(--panel-border); cursor: row-resize; display: flex; align-items: center; justify-content: center; }
+    .resizer span { width: 36px; height: 3px; border-radius: 2px; background: var(--panel-border); }
+    .resizer:hover span, .resizer.dragging span { background: var(--accent); }
+    .strip canvas { width: 100%; height: 100%; display: block; }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body>
+
+<header>
+    <h1>Rotation Method &mdash; Line Inclined to HP &amp; VP</h1>
+    <div class="sub">Two classical constructions reaching the same line: rotate the plan, or rotate the elevation</div>
+</header>
+
+<div class="main-container">
+    <div class="control-panel">
+        <div class="section-group">
+            <span class="section-title">Point A</span>
+            <div class="field-row"><label>Dist. of A from HP</label><input type="number" id="inHa" value="10" min="0" step="1"><span class="unit">mm</span></div>
+            <input type="range" id="inHaRange" min="0" max="150" step="1" value="10">
+            <div class="field-row"><label>A is</label><select id="inHaDir"><option value="above">Above HP</option><option value="below">Below HP</option></select></div>
+
+            <div class="field-row"><label>Dist. of A from VP</label><input type="number" id="inDa" value="15" min="0" step="1"><span class="unit">mm</span></div>
+            <input type="range" id="inDaRange" min="0" max="150" step="1" value="15">
+            <div class="field-row"><label>A is</label><select id="inDaDir"><option value="front">In front of VP</option><option value="behind">Behind VP</option></select></div>
+
+            <div class="field-row"><label>True Length</label><input type="number" id="inTL" value="90" min="1" step="1"><span class="unit">mm</span></div>
+            <input type="range" id="inTLRange" min="10" max="200" step="1" value="90">
+        </div>
+
+        <div class="section-group">
+            <span class="section-title">Point B &mdash; define using</span>
+            <div class="radio-group" id="bModeSelect">
+                <div class="radio-btn active" data-bmode="angles">True Angles (&theta;, &phi;)</div>
+                <div class="radio-btn" data-bmode="position">Position from Planes (hb, db)</div>
+            </div>
+
+            <div class="subgroup" id="bAnglesGroup">
+                <div class="field-row"><label>Inclination to HP (&theta;)</label><input type="number" id="inTheta" value="30" min="0" max="90" step="1"><span class="unit">&deg;</span></div>
+                <input type="range" id="inThetaRange" min="0" max="90" step="1" value="30">
+
+                <div class="field-row"><label>Inclination to VP (&phi;)</label><input type="number" id="inPhi" value="40" min="0" max="90" step="1"><span class="unit">&deg;</span></div>
+                <input type="range" id="inPhiRange" min="0" max="90" step="1" value="40">
+
+                <div class="field-row"><label>B is in quadrant (rel. to A)</label></div>
+                <div class="quadrant-grid" id="quadrantSelect">
+                    <button type="button" class="quad-btn" data-theta="above" data-phi="behind">II<span class="quad-sub">Higher &amp; More Behind</span></button>
+                    <button type="button" class="quad-btn active" data-theta="above" data-phi="front">I<span class="quad-sub">Higher &amp; More Front</span></button>
+                    <button type="button" class="quad-btn" data-theta="below" data-phi="behind">III<span class="quad-sub">Lower &amp; More Behind</span></button>
+                    <button type="button" class="quad-btn" data-theta="below" data-phi="front">IV<span class="quad-sub">Lower &amp; More Front</span></button>
+                </div>
+            </div>
+
+            <div class="subgroup" id="bPositionGroup" style="display:none;">
+                <div class="field-row"><label>Dist. of B from HP</label><input type="number" id="inHb" value="55" min="0" step="1"><span class="unit">mm</span></div>
+                <input type="range" id="inHbRange" min="0" max="200" step="1" value="55">
+                <div class="field-row"><label>B is</label><select id="inHbDir"><option value="above">Above HP</option><option value="below">Below HP</option></select></div>
+
+                <div class="field-row"><label>Dist. of B from VP</label><input type="number" id="inDb" value="60" min="0" step="1"><span class="unit">mm</span></div>
+                <input type="range" id="inDbRange" min="0" max="200" step="1" value="60">
+                <div class="field-row"><label>B is</label><select id="inDbDir"><option value="front">In front of VP</option><option value="behind">Behind VP</option></select></div>
+                <p class="hint">&theta; and &phi; are computed from A, B and TL (TL is bumped up automatically if too short to reach B).</p>
+            </div>
+
+            <p class="hint">&theta; and &phi; are the true inclination magnitudes (0&ndash;90&deg; each, must total &le;90&deg;); click a quadrant button to choose where B falls &mdash; I: higher &amp; more front, II: higher &amp; more behind, III: lower &amp; more behind, IV: lower &amp; more front (all relative to A).</p>
+            <div class="warn" id="warnBox"></div>
+        </div>
+
+        <div class="section-group">
+            <span class="section-title">Construction Method</span>
+            <div class="radio-group" id="methodSelect">
+                <div class="radio-btn active" data-method="A">A &mdash; Rotate the Plan (&theta; fixed, sweep to &phi;)</div>
+                <div class="radio-btn" data-method="B">B &mdash; Rotate the Elevation (&phi; fixed, sweep to &theta;)</div>
+                <div class="radio-btn" data-method="both">Both, simultaneously</div>
+            </div>
+        </div>
+
+        <div class="section-group">
+            <span class="section-title">Animation</span>
+            <div class="btn-row">
+                <div class="btn primary" id="playBtn">&#9654; Play</div>
+                <div class="btn" id="resetBtn">&#8634; Reset</div>
+            </div>
+            <input type="range" id="scrub" min="0" max="100" value="0">
+        </div>
+
+        <div class="section-group">
+            <span class="section-title">Display</span>
+            <div class="btn" id="tracesToggle">Show Traces (HT, h&prime;, VT, v)</div>
+            <div class="hint">Scroll or pinch over any 2D panel to zoom; drag (or one-finger touch) to pan left/right/up/down.</div>
+            <div class="btn-row">
+                <div class="btn" id="zoomOutBtn">&#8722; Zoom Out</div>
+                <div class="btn" id="zoomResetBtn">Reset View</div>
+                <div class="btn" id="zoomInBtn">&#43; Zoom In</div>
+            </div>
+        </div>
+
+        <div class="section-group">
+            <span class="section-title">Line Colors</span>
+            <div class="field-row"><label>Standard Fig. 1 (Method A start)</label><input type="color" id="colStd1" value="#34d399"></div>
+            <div class="field-row"><label>Standard Fig. 2 (Method B start)</label><input type="color" id="colStd2" value="#60a5fa"></div>
+            <div class="field-row"><label>Actual line (Method A)</label><input type="color" id="colLiveA" value="#fbbf24"></div>
+            <div class="field-row"><label>Actual line (Method B)</label><input type="color" id="colLiveB" value="#a78bfa"></div>
+            <div class="field-row"><label>Perpendiculars to planes</label><input type="color" id="colProj" value="#38bdf8"></div>
+            <div class="field-row"><label>Points A / B</label><input type="color" id="colPoints" value="#f43f5e"></div>
+            <div class="field-row"><label>Traces (HT / VT)</label><input type="color" id="colTrace" value="#facc15"></div>
+        </div>
+
+        <div class="section-group">
+            <span class="section-title">Live Values</span>
+            <div class="readout">
+                <div class="title" style="color:var(--a-live)">Method A &mdash; rotate plan</div>
+                <div class="row"><span class="k">Plan rotation &psi;</span><span class="v" id="rPsiA">0.0&deg; / 0.0&deg;</span></div>
+                <div class="row"><span class="k">&phi; (live &rarr; target)</span><span class="v" id="rPhiA">0.0&deg; &rarr; 40.0&deg;</span></div>
+                <div class="row"><span class="k">PL (const) / EL (live)</span><span class="v" id="rLenA">0.0 / 0.0 mm</span></div>
+            </div>
+            <div class="readout">
+                <div class="title" style="color:var(--b-live)">Method B &mdash; rotate elevation</div>
+                <div class="row"><span class="k">Elevation rotation &omega;</span><span class="v" id="rOmB">0.0&deg; / 0.0&deg;</span></div>
+                <div class="row"><span class="k">&theta; (live &rarr; target)</span><span class="v" id="rThetaB">0.0&deg; &rarr; 30.0&deg;</span></div>
+                <div class="row"><span class="k">EL (const) / PL (live)</span><span class="v" id="rLenB">0.0 / 0.0 mm</span></div>
+            </div>
+            <div class="readout"><div class="row"><span class="k">True Length</span><span class="v" id="rTL">90.0 mm</span></div></div>
+        </div>
+
+        <div class="section-group">
+            <span class="section-title">Legend</span>
+            <div class="legend">
+                <div><span class="sw" id="swPoints" style="background:#f43f5e"></span>A (fixed) and shared target B, with b / b&prime;</div>
+                <div><span class="sw" id="swProj" style="background:#38bdf8"></span>Perpendiculars (projectors) to HP / VP</div>
+                <div class="grp-title">Method A &mdash; rotate plan (point B1)</div>
+                <div><span class="sw" style="background:var(--a-start)"></span>B1 start &mdash; std. figure 1 (&parallel; VP)</div>
+                <div><span class="sw" style="background:var(--a-live)"></span>Live B1 (thick) with b1 (top) &amp; b1&prime; (front)</div>
+                <div><span class="sw" style="background:#475569"></span>Locus of b1 &mdash; arc on HP</div>
+                <div><span class="sw" style="background:var(--a-live)"></span>Locus of b1&prime; &mdash; straight line on VP</div>
+                <div class="grp-title">Method B &mdash; rotate elevation (point B2)</div>
+                <div><span class="sw" style="background:var(--b-start)"></span>B2 start &mdash; std. figure 2 (&parallel; HP)</div>
+                <div><span class="sw" style="background:var(--b-live)"></span>Live B2 (thick) with b2 (top) &amp; b2&prime; (front)</div>
+                <div><span class="sw" style="background:#475569"></span>Locus of b2&prime; &mdash; arc on VP</div>
+                <div><span class="sw" style="background:var(--b-live)"></span>Locus of b2 &mdash; straight line on HP</div>
+                <div class="grp-title">Apparent angles (bottom panels)</div>
+                <div>&alpha; &mdash; apparent inclination with HP (front view)</div>
+                <div>&beta; &mdash; apparent inclination with VP (top view)</div>
+                <div class="grp-title">Traces (toggle in Display)</div>
+                <div><span class="sw" style="background:#facc15"></span>HT / h&prime; (top-view &amp; front-view of Horizontal Trace), VT / v (front-view &amp; top-view of Vertical Trace) &mdash; shown in the 3D view and the Combined panel</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="view-area">
+        <div class="pane3d" id="pane3d">
+            <div class="pane-header">3D View &mdash; drag to rotate, scroll to zoom</div>
+            <div id="canvas3d-container"></div>
+            <div id="labels3d"></div>
+        </div>
+        <div class="resizer" id="resizer" title="Drag to resize"><span></span></div>
+        <div class="strip-row" id="stripRow">
+            <div class="strip">
+                <canvas id="planCanvas"></canvas>
+            </div>
+            <div class="strip">
+                <canvas id="frontCanvas"></canvas>
+            </div>
+            <div class="strip">
+                <canvas id="combinedCanvas"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const SCALE = 1.3;
+
+function rad(d) { return d * Math.PI / 180; }
+function deg(r) { return r * 180 / Math.PI; }
+function round1(v) { return Math.round(v * 10) / 10; }
+function easeInOutCubic(x) { return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; }
+function bisect(f, target, lo, hi) {
+    for (let i = 0; i < 60; i++) { const mid = (lo + hi) / 2; if (f(mid) < target) lo = mid; else hi = mid; }
+    return (lo + hi) / 2;
+}
+// Sign helper shared by all "which side" dropdowns (above/front = +1, below/behind = -1).
+function sgn(dir) { return (dir === 'above' || dir === 'front') ? 1 : -1; }
+
+const params = { ha: 10, da: 15, theta: 30, phi: 40, TL: 90, haDir: 'above', daDir: 'front', thetaDir: 'above', phiDir: 'front', hb: 55, db: 60, hbDir: 'above', dbDir: 'front' };
+const S = { method: 'A', bMode: 'angles', showTraces: false, zoom2d: 1, pan2d: { plan: { x: 0, y: 0 }, front: { x: 0, y: 0 }, combined: { x: 0, y: 0 } } };
+
+const COLORS = { std1: '#34d399', std2: '#60a5fa', liveA: '#fbbf24', liveB: '#a78bfa', proj: '#38bdf8', points: '#f43f5e', trace: '#facc15' };
+function hexNum(h) { return parseInt(h.replace('#', ''), 16); }
+const CSS_VAR_MAP = { std1: '--a-start', std2: '--b-start', liveA: '--a-live', liveB: '--b-live' };
+
+function signedHa() { return sgn(params.haDir) * params.ha; }
+function signedDa() { return sgn(params.daDir) * params.da; }
+
+let PL_A = 0, dy_A = 0, psiFinalA = 0, maxPhiForA = 90, feasibleA = true;
+let EL_B = 0, dz_B = 0, omegaFinalB = 0, maxThetaForB = 90, feasibleB = true;
+let thetaFold = { mag: 30, sign: 1 }, phiFold = { mag: 40, sign: 1 };
+
+
+function recompute() {
+    const msgs = [];
+
+    if (S.bMode === 'position') {
+        const Ay = signedHa(), Az = signedDa();
+        const By = (params.hbDir === 'above' ? 1 : -1) * params.hb;
+        const Bz = (params.dbDir === 'front' ? 1 : -1) * params.db;
+        const dy = By - Ay, dz = Bz - Az;
+        const distSq = dy * dy + dz * dz;
+        if (params.TL * params.TL < distSq + 1e-6) {
+            const needed = Math.sqrt(distSq);
+            params.TL = Math.ceil(needed) + 2;
+            document.getElementById('inTL').value = params.TL;
+            document.getElementById('inTLRange').value = params.TL;
+            msgs.push(`\u26a0 TL was too short to reach B; increased to ${round1(params.TL)} mm.`);
+        }
+        const dx = Math.sqrt(Math.max(0, params.TL * params.TL - distSq));
+        const PL = Math.sqrt(dx * dx + dz * dz) || 1e-9, EL = Math.sqrt(dx * dx + dy * dy) || 1e-9;
+        params.theta = deg(Math.atan2(Math.abs(dy), PL));
+        params.phi = deg(Math.atan2(Math.abs(dz), EL));
+        params.thetaDir = dy >= 0 ? 'above' : 'below';
+        params.phiDir = dz >= 0 ? 'front' : 'behind';
+        document.getElementById('inTheta').value = round1(params.theta);
+        document.getElementById('inThetaRange').value = round1(params.theta);
+        document.getElementById('inPhi').value = round1(params.phi);
+        document.getElementById('inPhiRange').value = round1(params.phi);
+    }
+
+    document.querySelectorAll('#quadrantSelect .quad-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.theta === params.thetaDir && b.dataset.phi === params.phiDir);
+    });
+
+    thetaFold = { mag: params.theta, sign: sgn(params.thetaDir) };
+    phiFold = { mag: params.phi, sign: sgn(params.phiDir) };
+
+    PL_A = params.TL * Math.cos(rad(thetaFold.mag));
+    dy_A = thetaFold.sign * params.TL * Math.sin(rad(thetaFold.mag));
+    function phiAtPsi(psiDeg) {
+        const psi = rad(psiDeg);
+        const dx = PL_A * Math.cos(psi), dz = PL_A * Math.sin(psi);
+        const EL = Math.sqrt(dx * dx + dy_A * dy_A);
+        return deg(Math.atan2(dz, EL));
+    }
+    maxPhiForA = phiAtPsi(90);
+    feasibleA = phiFold.mag <= maxPhiForA + 1e-6;
+    psiFinalA = bisect(phiAtPsi, Math.min(phiFold.mag, maxPhiForA), 0, 90);
+
+    EL_B = params.TL * Math.cos(rad(phiFold.mag));
+    dz_B = phiFold.sign * params.TL * Math.sin(rad(phiFold.mag));
+    function thetaAtOmega(omDeg) {
+        const om = rad(omDeg);
+        const dx = EL_B * Math.cos(om), dy = EL_B * Math.sin(om);
+        const PL = Math.sqrt(dx * dx + dz_B * dz_B);
+        return deg(Math.atan2(dy, PL));
+    }
+    maxThetaForB = thetaAtOmega(90);
+    feasibleB = thetaFold.mag <= maxThetaForB + 1e-6;
+    omegaFinalB = bisect(thetaAtOmega, Math.min(thetaFold.mag, maxThetaForB), 0, 90);
+
+    if (!feasibleA) msgs.push(`\u26a0 Method A: with \u03b8=${round1(thetaFold.mag)}\u00b0 the max reachable \u03c6 is ${round1(maxPhiForA)}\u00b0.`);
+    if (!feasibleB) msgs.push(`\u26a0 Method B: with \u03c6=${round1(phiFold.mag)}\u00b0 the max reachable \u03b8 is ${round1(maxThetaForB)}\u00b0.`);
+    const warnBox = document.getElementById('warnBox');
+    if (msgs.length) { warnBox.style.display = 'block'; warnBox.textContent = msgs.join('\n'); }
+    else { warnBox.style.display = 'none'; }
+
+    document.getElementById('rTL').textContent = round1(params.TL) + ' mm';
+    document.getElementById('rPhiA').textContent = '0.0\u00b0 \u2192 ' + round1(Math.min(phiFold.mag, maxPhiForA)) + '\u00b0';
+    document.getElementById('rThetaB').textContent = '0.0\u00b0 \u2192 ' + round1(Math.min(thetaFold.mag, maxThetaForB)) + '\u00b0';
+}
+
+function poseA(tt) {
+    const psi = psiFinalA * easeInOutCubic(tt);
+    const psiR = rad(psi);
+    const dx = PL_A * Math.cos(psiR), dz = phiFold.sign * PL_A * Math.sin(psiR);
+    const EL = Math.sqrt(dx * dx + dy_A * dy_A);
+    return { psi, dx, dy: dy_A, dz, EL, phi: deg(Math.atan2(Math.abs(dz), EL)) };
+}
+function poseB(tt) {
+    const om = omegaFinalB * easeInOutCubic(tt);
+    const omR = rad(om);
+    const dx = EL_B * Math.cos(omR), dy = thetaFold.sign * EL_B * Math.sin(omR);
+    const PL = Math.sqrt(dx * dx + dz_B * dz_B);
+    return { om, dx, dy, dz: dz_B, PL, theta: deg(Math.atan2(Math.abs(dy), PL)) };
+}
+
+// ---------------- Animation state ----------------
+let t = 0, playing = false, playStart = null;
+const DURATION = 3800;
+
+const playBtn = document.getElementById('playBtn');
+const scrub = document.getElementById('scrub');
+
+function setPlaying(p) { playing = p; playBtn.innerHTML = playing ? '&#10074;&#10074; Pause' : '&#9654; Play'; }
+playBtn.addEventListener('click', () => {
+    if (playing) { setPlaying(false); playStart = null; return; }
+    if (t >= 1) t = 0;
+    playStart = null;
+    setPlaying(true);
+});
+document.getElementById('resetBtn').addEventListener('click', () => { t = 0; setPlaying(false); playStart = null; scrub.value = 0; render(); });
+scrub.addEventListener('input', () => { setPlaying(false); playStart = null; t = scrub.value / 100; render(); });
+
+document.getElementById('methodSelect').querySelectorAll('.radio-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+        document.getElementById('methodSelect').querySelectorAll('.radio-btn').forEach(b => b.classList.remove('active'));
+        e.currentTarget.classList.add('active');
+        S.method = e.currentTarget.dataset.method;
+        render();
+    });
+});
+
+document.getElementById('bModeSelect').querySelectorAll('.radio-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+        document.getElementById('bModeSelect').querySelectorAll('.radio-btn').forEach(b => b.classList.remove('active'));
+        e.currentTarget.classList.add('active');
+        S.bMode = e.currentTarget.dataset.bmode;
+        document.getElementById('bAnglesGroup').style.display = S.bMode === 'angles' ? 'flex' : 'none';
+        document.getElementById('bPositionGroup').style.display = S.bMode === 'position' ? 'flex' : 'none';
+        applyParamsFromInputs(true);
+    });
+});
+
+function applyParamsFromInputs(resetAnim) {
+    params.ha = Math.max(0, parseFloat(document.getElementById('inHa').value) || 0);
+    params.da = Math.max(0, parseFloat(document.getElementById('inDa').value) || 0);
+    params.TL = Math.max(1, parseFloat(document.getElementById('inTL').value) || 90);
+    params.haDir = document.getElementById('inHaDir').value;
+    params.daDir = document.getElementById('inDaDir').value;
+
+    if (S.bMode === 'angles') {
+        params.theta = Math.min(90, Math.max(0, parseFloat(document.getElementById('inTheta').value) || 0));
+        params.phi = Math.min(90, Math.max(0, parseFloat(document.getElementById('inPhi').value) || 0));
+    } else {
+        params.hb = Math.max(0, parseFloat(document.getElementById('inHb').value) || 0);
+        params.db = Math.max(0, parseFloat(document.getElementById('inDb').value) || 0);
+        params.hbDir = document.getElementById('inHbDir').value;
+        params.dbDir = document.getElementById('inDbDir').value;
+    }
+    recompute();
+    if (resetAnim) { t = 0; setPlaying(false); playStart = null; scrub.value = 0; }
+    render();
+}
+
+['inHa', 'inDa', 'inTL', 'inTheta', 'inPhi', 'inHb', 'inDb'].forEach(id => {
+    document.getElementById(id).addEventListener('change', () => {
+        const rangeEl = document.getElementById(id + 'Range');
+        if (rangeEl) rangeEl.value = document.getElementById(id).value;
+        applyParamsFromInputs(true);
+    });
+});
+['inHaRange', 'inDaRange', 'inTLRange', 'inThetaRange', 'inPhiRange', 'inHbRange', 'inDbRange'].forEach(rid => {
+    document.getElementById(rid).addEventListener('input', () => {
+        const id = rid.replace('Range', '');
+        document.getElementById(id).value = document.getElementById(rid).value;
+        applyParamsFromInputs(true);
+    });
+});
+['inHaDir', 'inDaDir', 'inHbDir', 'inDbDir'].forEach(id => {
+    document.getElementById(id).addEventListener('change', () => applyParamsFromInputs(false));
+});
+
+document.getElementById('quadrantSelect').querySelectorAll('.quad-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+        document.getElementById('quadrantSelect').querySelectorAll('.quad-btn').forEach(b => b.classList.remove('active'));
+        e.currentTarget.classList.add('active');
+        params.thetaDir = e.currentTarget.dataset.theta;
+        params.phiDir = e.currentTarget.dataset.phi;
+        applyParamsFromInputs(true);
+    });
+});
+
+[['colStd1', 'std1'], ['colStd2', 'std2'], ['colLiveA', 'liveA'], ['colLiveB', 'liveB'], ['colProj', 'proj'], ['colPoints', 'points'], ['colTrace', 'trace']].forEach(([id, key]) => {
+    document.getElementById(id).addEventListener('input', () => {
+        COLORS[key] = document.getElementById(id).value;
+        if (CSS_VAR_MAP[key]) document.documentElement.style.setProperty(CSS_VAR_MAP[key], COLORS[key]);
+        if (key === 'proj') document.getElementById('swProj').style.background = COLORS[key];
+        if (key === 'points') document.getElementById('swPoints').style.background = COLORS[key];
+        render();
+    });
+});
+
+const tracesToggle = document.getElementById('tracesToggle');
+tracesToggle.addEventListener('click', () => {
+    S.showTraces = !S.showTraces;
+    tracesToggle.classList.toggle('primary', S.showTraces);
+    render();
+});
+
+function setZoom2d(z) {
+    S.zoom2d = Math.max(0.3, Math.min(6, z));
+    renderOrthoA(); renderOrthoB(); renderCombined();
+}
+document.getElementById('zoomInBtn').addEventListener('click', () => setZoom2d(S.zoom2d * 1.25));
+document.getElementById('zoomOutBtn').addEventListener('click', () => setZoom2d(S.zoom2d / 1.25));
+document.getElementById('zoomResetBtn').addEventListener('click', () => {
+    S.zoom2d = 1;
+    S.pan2d = { plan: { x: 0, y: 0 }, front: { x: 0, y: 0 }, combined: { x: 0, y: 0 } };
+    renderOrthoA(); renderOrthoB(); renderCombined();
+});
+
+// Independent zoom (wheel / pinch) and pan (drag / one-finger touch) per 2D panel.
+function attachPanZoom(canvas, panKey, rerenderOne) {
+    canvas.style.cursor = 'grab';
+    let dragging = false, lastX = 0, lastY = 0;
+    canvas.addEventListener('mousedown', (e) => { dragging = true; lastX = e.clientX; lastY = e.clientY; canvas.style.cursor = 'grabbing'; });
+    window.addEventListener('mousemove', (e) => {
+        if (!dragging) return;
+        S.pan2d[panKey].x += e.clientX - lastX;
+        S.pan2d[panKey].y += e.clientY - lastY;
+        lastX = e.clientX; lastY = e.clientY;
+        rerenderOne();
+    });
+    window.addEventListener('mouseup', () => { if (dragging) { dragging = false; canvas.style.cursor = 'grab'; } });
+
+    canvas.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        setZoom2d(S.zoom2d * (e.deltaY < 0 ? 1.1 : 0.9));
+    }, { passive: false });
+
+    let touchMode = null, touchX = 0, touchY = 0, pinchDist = 0, pinchZoomStart = 1;
+    canvas.addEventListener('touchstart', (e) => {
+        if (e.touches.length === 1) { touchMode = 'pan'; touchX = e.touches[0].clientX; touchY = e.touches[0].clientY; }
+        else if (e.touches.length === 2) {
+            touchMode = 'pinch';
+            pinchDist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+            pinchZoomStart = S.zoom2d;
+        }
+    }, { passive: true });
+    canvas.addEventListener('touchmove', (e) => {
+        if (touchMode === 'pan' && e.touches.length === 1) {
+            S.pan2d[panKey].x += e.touches[0].clientX - touchX;
+            S.pan2d[panKey].y += e.touches[0].clientY - touchY;
+            touchX = e.touches[0].clientX; touchY = e.touches[0].clientY;
+            rerenderOne();
+        } else if (touchMode === 'pinch' && e.touches.length === 2) {
+            const d = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+            setZoom2d(pinchZoomStart * (d / (pinchDist || d)));
+        }
+    }, { passive: true });
+    canvas.addEventListener('touchend', () => { touchMode = null; });
+}
+attachPanZoom(document.getElementById('planCanvas'), 'plan', () => renderOrthoA());
+attachPanZoom(document.getElementById('frontCanvas'), 'front', () => renderOrthoB());
+attachPanZoom(document.getElementById('combinedCanvas'), 'combined', () => renderCombined());
+
+// Drag-to-resize handle between the 3D pane and the bottom 2D strips ("sliding mechanism").
+const resizer = document.getElementById('resizer');
+const stripRow = document.getElementById('stripRow');
+let resizing = false;
+resizer.addEventListener('mousedown', (e) => {
+    resizing = true;
+    resizer.classList.add('dragging');
+    e.preventDefault();
+});
+window.addEventListener('mousemove', (e) => {
+    if (!resizing) return;
+    const areaRect = document.querySelector('.view-area').getBoundingClientRect();
+    let newStripH = areaRect.bottom - e.clientY;
+    newStripH = Math.max(90, Math.min(areaRect.height - 120, newStripH));
+    stripRow.style.height = newStripH + 'px';
+    onViewResize();
+});
+window.addEventListener('mouseup', () => { if (resizing) { resizing = false; resizer.classList.remove('dragging'); } });
+// touch support
+resizer.addEventListener('touchstart', () => { resizing = true; resizer.classList.add('dragging'); }, { passive: true });
+window.addEventListener('touchmove', (e) => {
+    if (!resizing || !e.touches[0]) return;
+    const areaRect = document.querySelector('.view-area').getBoundingClientRect();
+    let newStripH = areaRect.bottom - e.touches[0].clientY;
+    newStripH = Math.max(90, Math.min(areaRect.height - 120, newStripH));
+    stripRow.style.height = newStripH + 'px';
+    onViewResize();
+}, { passive: true });
+window.addEventListener('touchend', () => { if (resizing) { resizing = false; resizer.classList.remove('dragging'); } });
+
+// ---------------- Three.js setup ----------------
+const container3d = document.getElementById('canvas3d-container');
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0f172a);
+
+const camera3d = new THREE.PerspectiveCamera(45, container3d.clientWidth / container3d.clientHeight, 1, 1000);
+camera3d.position.set(230, 190, 280);
+
+const renderer3d = new THREE.WebGLRenderer({ antialias: true });
+renderer3d.setSize(container3d.clientWidth, container3d.clientHeight);
+container3d.appendChild(renderer3d.domElement);
+
+const controls3d = new THREE.OrbitControls(camera3d, renderer3d.domElement);
+controls3d.enableDamping = true;
+controls3d.dampingFactor = 0.05;
+
+scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+const dirLight = new THREE.DirectionalLight(0xffffff, 0.5);
+dirLight.position.set(100, 200, 100);
+scene.add(dirLight);
+
+const pSize = 260;
+const planeMat = new THREE.MeshBasicMaterial({ color: 0x818cf8, transparent: true, opacity: 0.12, side: THREE.DoubleSide });
+scene.add(new THREE.Mesh(new THREE.PlaneGeometry(pSize, pSize), planeMat)); // VP (world z=0)
+const hpMesh = new THREE.Mesh(new THREE.PlaneGeometry(pSize, pSize), planeMat);
+hpMesh.rotation.x = -Math.PI / 2;
+scene.add(hpMesh); // HP (world y=0)
+
+let dynamicGroup = new THREE.Group();
+scene.add(dynamicGroup);
+
+const labels3dContainer = document.getElementById('labels3d');
+const labelEls = {};
+let labelAnchors = {};
+function setLabel(key, text, color, anchorVec) {
+    let d = labelEls[key];
+    if (!d) { d = document.createElement('div'); d.className = 'label3d'; labels3dContainer.appendChild(d); labelEls[key] = d; }
+    d.textContent = text; d.style.color = color; labelAnchors[key] = anchorVec;
+}
+function clearLabels() { labelAnchors = {}; Object.values(labelEls).forEach(d => d.style.display = 'none'); }
+function refreshLabelPositions() {
+    const w = container3d.clientWidth, h = container3d.clientHeight;
+    Object.keys(labelAnchors).forEach(key => {
+        const d = labelEls[key];
+        const v = labelAnchors[key].clone().project(camera3d);
+        if (v.z > 1 || v.z < -1) { d.style.display = 'none'; return; }
+        d.style.display = 'block';
+        d.style.left = ((v.x * 0.5 + 0.5) * w) + 'px';
+        d.style.top = ((-v.y * 0.5 + 0.5) * h) + 'px';
+    });
+}
+
+function pt(v3) { return new THREE.Vector3(v3.x * SCALE, v3.y * SCALE, v3.z * SCALE); }
+function seg(p, q, mat) { const g = new THREE.BufferGeometry().setFromPoints([pt(p), pt(q)]); const l = new THREE.Line(g, mat); if (mat.dashSize) l.computeLineDistances(); return l; }
+function dot(p, color, r) { const m = new THREE.Mesh(new THREE.SphereGeometry(r || 3, 16, 16), new THREE.MeshBasicMaterial({ color })); m.position.copy(pt(p)); return m; }
+function dash(color) { return new THREE.LineDashedMaterial({ color, dashSize: 3, gapSize: 2, transparent: true, opacity: 0.65 }); }
+function solid(color, w) { return new THREE.LineBasicMaterial({ color, linewidth: w || 3 }); }
+function faint(color, w) { return new THREE.LineBasicMaterial({ color, linewidth: w || 1.5, transparent: true, opacity: 0.35 }); }
+// A real thick cylinder segment (THREE line widths are ignored by most WebGL backends).
+function thickSeg(p, q, color, radius) {
+    const P = pt(p), Q = pt(q);
+    const dir = new THREE.Vector3().subVectors(Q, P);
+    const len = dir.length();
+    if (len < 1e-6) return new THREE.Group();
+    const geo = new THREE.CylinderGeometry(radius, radius, len, 10);
+    const mesh = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color }));
+    mesh.position.copy(P).addScaledVector(dir, 0.5);
+    mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.clone().normalize());
+    return mesh;
+}
+
+// draws one method's rotating line: its start ghost (standard/basic case), the live moving
+// point (B1 or B2) as a thick actual line, its projections (b1/b1' or b2/b2'), the on-plane
+// plan/elevation lines for both the start position (faint) and the live position, and the
+// sweep arc / straight locus traced by the two projections as the line rotates.
+function drawCase(A, Bmove, Bstart, colors, tag, moveLabel, arcPts, lociSeg) {
+    const aHP = { x: A.x, y: 0, z: A.z }, aVP = { x: A.x, y: A.y, z: 0 };
+    const projColor = hexNum(COLORS.proj);
+
+    // standard/basic case (start position): line + its plan view + its front view, all faint
+    dynamicGroup.add(seg(A, Bstart, faint(colors.start, 2)));
+    dynamicGroup.add(dot(Bstart, colors.start, 2.4));
+    setLabel('B' + tag + 'start', `${moveLabel} start`, colors.startHex, pt(Bstart));
+
+    const bHPs = { x: Bstart.x, y: 0, z: Bstart.z }, bVPs = { x: Bstart.x, y: Bstart.y, z: 0 };
+    dynamicGroup.add(seg(aHP, bHPs, faint(colors.start, 2)));
+    dynamicGroup.add(seg(aVP, bVPs, faint(colors.start, 2)));
+
+    // live rotating line (the actual line): thick solid cylinder
+    dynamicGroup.add(thickSeg(A, Bmove, colors.live, 1.3));
+    dynamicGroup.add(dot(Bmove, colors.live, 3.4));
+    setLabel(moveLabel, moveLabel, colors.liveHex, pt(Bmove));
+
+    const bHP = { x: Bmove.x, y: 0, z: Bmove.z }, bVP = { x: Bmove.x, y: Bmove.y, z: 0 };
+    dynamicGroup.add(seg(Bmove, bHP, dash(projColor)));
+    dynamicGroup.add(seg(Bmove, bVP, dash(projColor)));
+    dynamicGroup.add(dot(bHP, colors.live, 2.1));
+    dynamicGroup.add(dot(bVP, colors.live, 2.1));
+    const lc = moveLabel.toLowerCase();
+    setLabel(lc + 'tv', lc, colors.liveHex, pt(bHP));
+    setLabel(lc + 'fv', lc + "'", colors.liveHex, pt(bVP));
+
+    // on-plane current plan view (a-b) and front view (a'-b')
+    dynamicGroup.add(seg(aHP, bHP, solid(colors.live, 2)));
+    dynamicGroup.add(seg(aVP, bVP, solid(colors.live, 2)));
+
+    // sweep arc: locus of the projection that actually lies in the rotation plane
+    if (arcPts && arcPts.full.length > 1) {
+        const arcFullMat = new THREE.LineDashedMaterial({ color: 0x475569, dashSize: 2, gapSize: 2 });
+        const arcFull = new THREE.Line(new THREE.BufferGeometry().setFromPoints(arcPts.full.map(pt)), arcFullMat);
+        arcFull.computeLineDistances();
+        dynamicGroup.add(arcFull);
+        if (arcPts.prog.length > 1) dynamicGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(arcPts.prog.map(pt)), solid(colors.live, 2)));
+    }
+
+    // straight locus: the other projection just slides (its rotation-axis coordinate is fixed)
+    if (lociSeg) {
+        const lociMat = new THREE.LineDashedMaterial({ color: colors.live, dashSize: 1.5, gapSize: 2.2, transparent: true, opacity: 0.9 });
+        const l = new THREE.Line(new THREE.BufferGeometry().setFromPoints([pt(lociSeg.p0), pt(lociSeg.p1)]), lociMat);
+        l.computeLineDistances();
+        dynamicGroup.add(l);
+    }
+}
+
+function render3D() {
+    scene.remove(dynamicGroup);
+    dynamicGroup = new THREE.Group();
+    clearLabels();
+
+    const projColor = hexNum(COLORS.proj);
+    const pointColor = hexNum(COLORS.points);
+
+    setLabel('VP', 'VP', '#818cf8', new THREE.Vector3(-95, 100, 0));
+    setLabel('HP', 'HP', '#94a3b8', new THREE.Vector3(75, 0, 95));
+
+    const A = { x: 0, y: signedHa(), z: signedDa() };
+    const aHP = { x: A.x, y: 0, z: A.z }, aVP = { x: A.x, y: A.y, z: 0 };
+
+    dynamicGroup.add(dot(A, pointColor, 3.6));
+    setLabel('A', 'A', COLORS.points, pt(A));
+    dynamicGroup.add(dot(aHP, projColor, 2.4)); setLabel('a', 'a', COLORS.proj, pt(aHP));
+    dynamicGroup.add(dot(aVP, projColor, 2.4)); setLabel("a'", "a'", COLORS.proj, pt(aVP));
+    dynamicGroup.add(seg(A, aHP, dash(projColor)));
+    dynamicGroup.add(seg(A, aVP, dash(projColor)));
+
+    // Shared final target B (identical result of both constructions), drawn once as a fixed reference
+    const psiR1 = rad(psiFinalA);
+    const Bfinal = { x: PL_A * Math.cos(psiR1), y: A.y + dy_A, z: A.z + phiFold.sign * PL_A * Math.sin(psiR1) };
+    const bHPf = { x: Bfinal.x, y: 0, z: Bfinal.z }, bVPf = { x: Bfinal.x, y: Bfinal.y, z: 0 };
+    dynamicGroup.add(seg(A, Bfinal, dash(0xe2e8f0)));
+    dynamicGroup.add(dot(Bfinal, pointColor, 3.6));
+    setLabel('B', 'B', COLORS.points, pt(Bfinal));
+    dynamicGroup.add(dot(bHPf, projColor, 2.4)); setLabel('b', 'b', COLORS.proj, pt(bHPf));
+    dynamicGroup.add(dot(bVPf, projColor, 2.4)); setLabel("b'", "b'", COLORS.proj, pt(bVPf));
+    dynamicGroup.add(seg(Bfinal, bHPf, dash(projColor)));
+    dynamicGroup.add(seg(Bfinal, bVPf, dash(projColor)));
+    dynamicGroup.add(seg(aHP, bHPf, dash(0x94a3b8)));
+    dynamicGroup.add(seg(aVP, bVPf, dash(0x94a3b8)));
+
+    if (S.showTraces) {
+        const traceColor = hexNum(COLORS.trace);
+        function traceDot(p, r) { const m = dot(p, traceColor, r); m.material.depthTest = false; m.renderOrder = 999; return m; }
+        function traceSeg(p, q) { const mat = dash(traceColor); mat.depthTest = false; const l = seg(p, q, mat); l.renderOrder = 999; return l; }
+        function connect(nodeList) {
+            nodeList.sort((n1, n2) => n1.u - n2.u);
+            for (let i = 0; i < nodeList.length - 1; i++) dynamicGroup.add(traceSeg(nodeList[i].p, nodeList[i + 1].p));
+        }
+        const ddx = Bfinal.x - A.x, ddy = Bfinal.y - A.y, ddz = Bfinal.z - A.z;
+        let HT3 = null, h3 = null, VT3 = null, v3 = null, uHT = null, uVT = null;
+        if (Math.abs(ddy) > 1e-6) {
+            uHT = -A.y / ddy;
+            HT3 = { x: A.x + uHT * ddx, y: 0, z: A.z + uHT * ddz };
+            h3 = { x: HT3.x, y: 0, z: 0 };
+            dynamicGroup.add(traceDot(HT3, 3));
+            dynamicGroup.add(traceDot(h3, 2.4));
+            dynamicGroup.add(traceSeg(HT3, h3));
+            setLabel('HT3d', 'HT', COLORS.trace, pt(HT3));
+            setLabel('h3d', "h'", COLORS.trace, pt(h3));
+        }
+        if (Math.abs(ddz) > 1e-6) {
+            uVT = -A.z / ddz;
+            VT3 = { x: A.x + uVT * ddx, y: A.y + uVT * ddy, z: 0 };
+            v3 = { x: VT3.x, y: 0, z: 0 };
+            dynamicGroup.add(traceDot(VT3, 3));
+            dynamicGroup.add(traceDot(v3, 2.4));
+            dynamicGroup.add(traceSeg(VT3, v3));
+            setLabel('VT3d', 'VT', COLORS.trace, pt(VT3));
+            setLabel('v3d', 'v', COLORS.trace, pt(v3));
+        }
+
+        // 1) The actual extended line, through the true 3D positions: HT - A - B - VT (in order).
+        const realNodes = [{ u: 0, p: A }, { u: 1, p: Bfinal }];
+        if (HT3) realNodes.push({ u: uHT, p: HT3 });
+        if (VT3) realNodes.push({ u: uVT, p: VT3 });
+        connect(realNodes);
+
+        // 2) Front view (projection on VP, z=0): h' - a' - b' - VT, all lying flat on VP.
+        const fvNodes = [{ u: 0, p: aVP }, { u: 1, p: bVPf }];
+        if (h3) fvNodes.push({ u: uHT, p: h3 });
+        if (VT3) fvNodes.push({ u: uVT, p: VT3 });
+        connect(fvNodes);
+
+        // 3) Plan view (projection on HP, y=0): v - a - b - HT, all lying flat on HP.
+        const tvNodes = [{ u: 0, p: aHP }, { u: 1, p: bHPf }];
+        if (v3) tvNodes.push({ u: uVT, p: v3 });
+        if (HT3) tvNodes.push({ u: uHT, p: HT3 });
+        connect(tvNodes);
+    }
+
+    const N = 48;
+
+    if (S.method === 'A' || S.method === 'both') {
+        const pA = poseA(t);
+        const B1move = { x: pA.dx, y: A.y + pA.dy, z: A.z + pA.dz };
+        const B1start = { x: PL_A, y: A.y + dy_A, z: A.z };
+        const full = [], prog = [];
+        for (let i = 0; i <= N; i++) { const s = rad(psiFinalA * i / N); full.push({ x: A.x + PL_A * Math.cos(s), y: 0, z: A.z + phiFold.sign * PL_A * Math.sin(s) }); }
+        for (let i = 0; i <= N; i++) { const s = rad(pA.psi * i / N); prog.push({ x: A.x + PL_A * Math.cos(s), y: 0, z: A.z + phiFold.sign * PL_A * Math.sin(s) }); }
+        const b1pFrom = { x: A.x + PL_A, y: A.y + dy_A, z: 0 };
+        const b1pTo = { x: A.x + PL_A * Math.cos(psiR1), y: A.y + dy_A, z: 0 };
+        const colorsA = { start: hexNum(COLORS.std1), live: hexNum(COLORS.liveA), startHex: COLORS.std1, liveHex: COLORS.liveA };
+        drawCase(A, B1move, B1start, colorsA, 'A', 'B1', { full, prog }, { p0: b1pFrom, p1: b1pTo });
+        document.getElementById('rPsiA').textContent = round1(pA.psi) + '\u00b0 / ' + round1(psiFinalA) + '\u00b0';
+        document.getElementById('rLenA').textContent = round1(PL_A) + ' / ' + round1(pA.EL) + ' mm';
+        document.getElementById('rPhiA').textContent = round1(pA.phi) + '\u00b0 \u2192 ' + round1(Math.min(phiFold.mag, maxPhiForA)) + '\u00b0';
+    }
+
+    if (S.method === 'B' || S.method === 'both') {
+        const pB = poseB(t);
+        const omR1 = rad(omegaFinalB);
+        const B2move = { x: pB.dx, y: A.y + pB.dy, z: A.z + pB.dz };
+        const B2start = { x: EL_B, y: A.y, z: A.z + dz_B };
+        const full = [], prog = [];
+        for (let i = 0; i <= N; i++) { const s = rad(omegaFinalB * i / N); full.push({ x: A.x + EL_B * Math.cos(s), y: A.y + thetaFold.sign * EL_B * Math.sin(s), z: 0 }); }
+        for (let i = 0; i <= N; i++) { const s = rad(pB.om * i / N); prog.push({ x: A.x + EL_B * Math.cos(s), y: A.y + thetaFold.sign * EL_B * Math.sin(s), z: 0 }); }
+        const b2From = { x: A.x + EL_B, y: 0, z: A.z + dz_B };
+        const b2To = { x: A.x + EL_B * Math.cos(omR1), y: 0, z: A.z + dz_B };
+        const colorsB = { start: hexNum(COLORS.std2), live: hexNum(COLORS.liveB), startHex: COLORS.std2, liveHex: COLORS.liveB };
+        drawCase(A, B2move, B2start, colorsB, 'B', 'B2', { full, prog }, { p0: b2From, p1: b2To });
+        document.getElementById('rOmB').textContent = round1(pB.om) + '\u00b0 / ' + round1(omegaFinalB) + '\u00b0';
+        document.getElementById('rLenB').textContent = round1(EL_B) + ' / ' + round1(pB.PL) + ' mm';
+        document.getElementById('rThetaB').textContent = round1(pB.theta) + '\u00b0 \u2192 ' + round1(Math.min(thetaFold.mag, maxThetaForB)) + '\u00b0';
+    }
+
+    scene.add(dynamicGroup);
+}
+
+// ---------------- Orthographic panels: combined Front View + Top View ----------------
+// Each panel draws the standard xy line with the Front View above it and the Top View
+// below it, showing the standard/basic (start) case in faint colour together with the
+// live/current position in full colour, connected by projectors, for each method. Apparent
+// angles alpha (front view, w.r.t. HP) and beta (top view, w.r.t. VP) are marked on the live line.
+function drawAngleMark(ctx, vx, vy, toX, toY, radius, color, label) {
+    const dx = toX - vx, dy = toY - vy;
+    if (Math.abs(dx) < 1e-3 && Math.abs(dy) < 1e-3) return;
+    const ang = Math.atan2(dy, dx);
+    ctx.strokeStyle = color; ctx.lineWidth = 1.3;
+    ctx.beginPath();
+    ctx.arc(vx, vy, radius, 0, ang, ang < 0);
+    ctx.stroke();
+    const mid = ang / 2;
+    ctx.fillStyle = color; ctx.font = '11px system-ui';
+    ctx.fillText(label, vx + Math.cos(mid) * (radius + 16) - 10, vy + Math.sin(mid) * (radius + 16));
+}
+
+// Draws the locus of the rotating endpoint's projections in a 2D ortho panel: for method A
+// (rotate plan) b1 traces an arc in the TOP VIEW and b1' slides along a straight line in the
+// FRONT VIEW; for method B (rotate elevation) it's the mirror image. Matches the 3D loci.
+function drawLocusArc(ctx, CX, CYfv, CYtv, kind, A, color) {
+    ctx.strokeStyle = color; ctx.setLineDash([2, 2]); ctx.lineWidth = 1.3;
+    if (kind === 'A') {
+        ctx.beginPath();
+        for (let i = 0; i <= 40; i++) {
+            const s = rad(psiFinalA * i / 40);
+            const px = CX(PL_A * Math.cos(s)), pz = CYtv(A.da + phiFold.sign * PL_A * Math.sin(s));
+            if (i === 0) ctx.moveTo(px, pz); else ctx.lineTo(px, pz);
+        }
+        ctx.stroke();
+        const y1 = CYfv(A.ha + dy_A);
+        ctx.beginPath(); ctx.moveTo(CX(PL_A), y1); ctx.lineTo(CX(PL_A * Math.cos(rad(psiFinalA))), y1); ctx.stroke();
+    } else {
+        ctx.beginPath();
+        for (let i = 0; i <= 40; i++) {
+            const s = rad(omegaFinalB * i / 40);
+            const px = CX(EL_B * Math.cos(s)), py = CYfv(A.ha + thetaFold.sign * EL_B * Math.sin(s));
+            if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+        }
+        ctx.stroke();
+        const z1 = CYtv(A.da + dz_B);
+        ctx.beginPath(); ctx.moveTo(CX(EL_B), z1); ctx.lineTo(CX(EL_B * Math.cos(rad(omegaFinalB))), z1); ctx.stroke();
+    }
+    ctx.setLineDash([]);
+}
+
+function drawOrthoCombined(ctx, w, h, A, ptsStart, ptsLive, colorStart, colorLive, label, extraTop, locusKind, panOffset) {
+    ctx.clearRect(0, 0, w, h);
+    const xyY = h * 0.52;
+    const padX = 60;
+    const pan = panOffset || { x: 0, y: 0 };
+    const pts = [
+        { x: 0, y: A.ha }, { x: 0, y: A.da },
+        { x: ptsStart.x, y: ptsStart.by }, { x: ptsStart.x, y: ptsStart.bz },
+        { x: ptsLive.x, y: ptsLive.by }, { x: ptsLive.x, y: ptsLive.bz }
+    ];
+    let maxX = 1, maxY = 1;
+    pts.forEach(p => { maxX = Math.max(maxX, Math.abs(p.x)); maxY = Math.max(maxY, Math.abs(p.y)); });
+    const s = Math.min((w - 2 * padX) / maxX, (h / 2 - 34) / maxY) * S.zoom2d;
+
+    function CX(x) { return padX + x * s + pan.x; }
+    function CYfv(y) { return xyY - y * s + pan.y; }
+    function CYtv(z) { return xyY + z * s + pan.y; }
+
+    ctx.strokeStyle = '#334155'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(16, xyY); ctx.lineTo(w - 16, xyY); ctx.stroke();
+    ctx.fillStyle = '#94a3b8'; ctx.font = '11px system-ui';
+    ctx.fillText('x', 20, xyY - 6); ctx.fillText('y', w - 26, xyY - 6);
+    ctx.fillText('FRONT VIEW', padX - 4, 16);
+    ctx.fillText('TOP VIEW', padX - 4, h - 8);
+
+    const aFVx = CX(0), aFVy = CYfv(A.ha), aTVx = CX(0), aTVy = CYtv(A.da);
+    ctx.strokeStyle = COLORS.proj; ctx.setLineDash([3, 3]); ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(aFVx, aFVy); ctx.lineTo(aTVx, aTVy); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle = COLORS.proj;
+    ctx.beginPath(); ctx.arc(aFVx, aFVy, 3, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(aTVx, aTVy, 3, 0, Math.PI * 2); ctx.fill();
+    ctx.fillText("a'", aFVx - 14, aFVy + 4);
+    ctx.fillText('a', aTVx - 12, aTVy + 4);
+
+    function drawSet(pset, color, faint) {
+        const bFVx = CX(pset.x), bFVy = CYfv(pset.by), bTVx = CX(pset.x), bTVy = CYtv(pset.bz);
+        ctx.globalAlpha = faint ? 0.4 : 1;
+        ctx.strokeStyle = color; ctx.lineWidth = faint ? 1.4 : 3.4;
+        ctx.beginPath(); ctx.moveTo(aFVx, aFVy); ctx.lineTo(bFVx, bFVy); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(aTVx, aTVy); ctx.lineTo(bTVx, bTVy); ctx.stroke();
+        ctx.strokeStyle = COLORS.proj; ctx.setLineDash([3, 3]); ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(bFVx, bFVy); ctx.lineTo(bTVx, bTVy); ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = color;
+        ctx.beginPath(); ctx.arc(bFVx, bFVy, faint ? 2.6 : 3.8, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(bTVx, bTVy, faint ? 2.6 : 3.8, 0, Math.PI * 2); ctx.fill();
+        ctx.globalAlpha = 1;
+        ctx.fillText(label + "'", bFVx + 6, bFVy - 6);
+        ctx.fillText(label, bTVx + 6, bTVy + 12);
+        return { bFVx, bFVy, bTVx, bTVy };
+    }
+
+    const start = drawSet(ptsStart, colorStart, true);
+    const live = drawSet(ptsLive, colorLive, false);
+
+    if (locusKind) drawLocusArc(ctx, CX, CYfv, CYtv, locusKind, A, colorLive);
+
+    // The standard/basic-case (start) line shows the TRUE angle directly: theta in the front
+    // view for Method A (line || VP), phi in the top view for Method B (line || HP).
+    if (locusKind === 'A') {
+        drawAngleMark(ctx, aFVx, aFVy, start.bFVx, start.bFVy, 20, colorStart, `\u03b8=${round1(thetaFold.mag)}\u00b0`);
+    } else if (locusKind === 'B') {
+        drawAngleMark(ctx, aTVx, aTVy, start.bTVx, start.bTVy, 20, colorStart, `\u03c6=${round1(phiFold.mag)}\u00b0`);
+    }
+
+    const alpha = deg(Math.atan2(Math.abs(ptsLive.by - A.ha), Math.abs(ptsLive.x) || 1e-6));
+    const beta = deg(Math.atan2(Math.abs(ptsLive.bz - A.da), Math.abs(ptsLive.x) || 1e-6));
+    drawAngleMark(ctx, aFVx, aFVy, live.bFVx, live.bFVy, 24, colorLive, `\u03b1=${round1(alpha)}\u00b0`);
+    drawAngleMark(ctx, aTVx, aTVy, live.bTVx, live.bTVy, 24, colorLive, `\u03b2=${round1(beta)}\u00b0`);
+
+    ctx.fillStyle = '#f8fafc'; ctx.font = '12px system-ui';
+    ctx.fillText(extraTop, w - 190, 22);
+}
+
+const planCanvas = document.getElementById('planCanvas');
+const pctx = planCanvas.getContext('2d');
+function renderOrthoA() {
+    planCanvas.width = planCanvas.parentElement.clientWidth;
+    planCanvas.height = planCanvas.parentElement.clientHeight;
+    const pA = poseA(t);
+    const A = { ha: signedHa(), da: signedDa() };
+    const ptsStart = { x: PL_A, by: A.ha + dy_A, bz: A.da };
+    const ptsLive = { x: pA.dx, by: A.ha + pA.dy, bz: A.da + pA.dz };
+    drawOrthoCombined(pctx, planCanvas.width, planCanvas.height, A, ptsStart, ptsLive, COLORS.std1, COLORS.liveA, 'b1', `\u03c8 = ${round1(pA.psi)}\u00b0 / ${round1(psiFinalA)}\u00b0`, 'A', S.pan2d.plan);
+}
+
+const frontCanvas = document.getElementById('frontCanvas');
+const fctx = frontCanvas.getContext('2d');
+function renderOrthoB() {
+    frontCanvas.width = frontCanvas.parentElement.clientWidth;
+    frontCanvas.height = frontCanvas.parentElement.clientHeight;
+    const pB = poseB(t);
+    const A = { ha: signedHa(), da: signedDa() };
+    const ptsStart = { x: EL_B, by: A.ha, bz: A.da + dz_B };
+    const ptsLive = { x: pB.dx, by: A.ha + pB.dy, bz: A.da + dz_B };
+    drawOrthoCombined(fctx, frontCanvas.width, frontCanvas.height, A, ptsStart, ptsLive, COLORS.std2, COLORS.liveB, 'b2', `\u03c9 = ${round1(pB.om)}\u00b0 / ${round1(omegaFinalB)}\u00b0`, 'B', S.pan2d.front);
+}
+
+// Where the (possibly extended) final line crosses HP (Horizontal Trace) and VP (Vertical Trace),
+// in the same {x: spread, by: height, bz: depth} coordinate convention as the ortho panels above.
+function computeTraces(A, B) {
+    const dy = B.by - A.ha, dz = B.bz - A.da;
+    let HT = null, VT = null, uHT = null, uVT = null;
+    if (Math.abs(dy) > 1e-6) { uHT = -A.ha / dy; HT = { x: uHT * B.x, z: A.da + uHT * dz }; }
+    if (Math.abs(dz) > 1e-6) { uVT = -A.da / dz; VT = { x: uVT * B.x, y: A.ha + uVT * dy }; }
+    return { HT, VT, uHT, uVT };
+}
+
+// The combined panel: just the single final answer line (no start ghost), both views together,
+// with optional Horizontal/Vertical Trace construction (HT, h', VT, v) when traces are toggled on.
+function drawFinalOrtho(ctx, w, h, A, B, liveB1, liveB2, panOffset) {
+    ctx.clearRect(0, 0, w, h);
+    const xyY = h * 0.52;
+    const padX = 60;
+    const pan = panOffset || { x: 0, y: 0 };
+
+    const traces = S.showTraces ? computeTraces(A, B) : { HT: null, VT: null, uHT: null, uVT: null };
+    const HT = traces.HT, VT = traces.VT;
+
+    // Standard figure 1 (B1 start, || VP) and standard figure 2 (B2 start, || HP), superimposed faintly.
+    const std1Pt = { x: PL_A, by: A.ha + dy_A, bz: A.da };
+    const std2Pt = { x: EL_B, by: A.ha, bz: A.da + dz_B };
+
+    const pts = [
+        { x: 0, y: A.ha }, { x: 0, y: A.da }, { x: B.x, y: B.by }, { x: B.x, y: B.bz },
+        { x: std1Pt.x, y: std1Pt.by }, { x: std1Pt.x, y: std1Pt.bz },
+        { x: std2Pt.x, y: std2Pt.by }, { x: std2Pt.x, y: std2Pt.bz },
+        { x: liveB1.x, y: liveB1.by }, { x: liveB1.x, y: liveB1.bz },
+        { x: liveB2.x, y: liveB2.by }, { x: liveB2.x, y: liveB2.bz }
+    ];
+    if (HT) pts.push({ x: HT.x, y: 0 }, { x: HT.x, y: HT.z });
+    if (VT) pts.push({ x: VT.x, y: VT.y }, { x: VT.x, y: 0 });
+    let maxX = 1, maxY = 1;
+    pts.forEach(p => { maxX = Math.max(maxX, Math.abs(p.x)); maxY = Math.max(maxY, Math.abs(p.y)); });
+    const s = Math.min((w - 2 * padX) / maxX, (h / 2 - 34) / maxY) * S.zoom2d;
+
+    function CX(x) { return padX + x * s + pan.x; }
+    function CYfv(y) { return xyY - y * s + pan.y; }
+    function CYtv(z) { return xyY + z * s + pan.y; }
+
+    ctx.strokeStyle = '#334155'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(16, xyY); ctx.lineTo(w - 16, xyY); ctx.stroke();
+    ctx.fillStyle = '#94a3b8'; ctx.font = '11px system-ui';
+    ctx.fillText('x', 20, xyY - 6); ctx.fillText('y', w - 26, xyY - 6);
+    ctx.fillText('FRONT VIEW', padX - 4, 16);
+    ctx.fillText('TOP VIEW', padX - 4, h - 8);
+
+    const aFVx = CX(0), aFVy = CYfv(A.ha), aTVx = CX(0), aTVy = CYtv(A.da);
+    const bFVx = CX(B.x), bFVy = CYfv(B.by), bTVx = CX(B.x), bTVy = CYtv(B.bz);
+
+    ctx.strokeStyle = COLORS.proj; ctx.setLineDash([3, 3]); ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(aFVx, aFVy); ctx.lineTo(aTVx, aTVy); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(bFVx, bFVy); ctx.lineTo(bTVx, bTVy); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = COLORS.proj;
+    [[aFVx, aFVy], [aTVx, aTVy], [bFVx, bFVy], [bTVx, bTVy]].forEach(([x, y]) => { ctx.beginPath(); ctx.arc(x, y, 3, 0, Math.PI * 2); ctx.fill(); });
+    ctx.fillText("a'", aFVx - 14, aFVy + 4);
+    ctx.fillText('a', aTVx - 12, aTVy + 4);
+    ctx.fillText("b'", bFVx + 6, bFVy - 6);
+    ctx.fillText('b', bTVx + 6, bTVy + 12);
+
+    function faintSet(pset, color, tag) {
+        const fx = CX(pset.x), fy = CYfv(pset.by), tx = CX(pset.x), ty = CYtv(pset.bz);
+        ctx.globalAlpha = 0.4;
+        ctx.strokeStyle = color; ctx.lineWidth = 1.4;
+        ctx.beginPath(); ctx.moveTo(aFVx, aFVy); ctx.lineTo(fx, fy); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(aTVx, aTVy); ctx.lineTo(tx, ty); ctx.stroke();
+        ctx.beginPath(); ctx.arc(fx, fy, 2.6, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(tx, ty, 2.6, 0, Math.PI * 2); ctx.fill();
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = color;
+        ctx.fillText(tag + "'", fx + 5, fy - 5);
+        ctx.fillText(tag, tx + 5, ty + 11);
+    }
+    faintSet(std1Pt, COLORS.std1, 'b1');
+    faintSet(std2Pt, COLORS.std2, 'b2');
+    drawLocusArc(ctx, CX, CYfv, CYtv, 'A', A, COLORS.std1);
+    drawLocusArc(ctx, CX, CYfv, CYtv, 'B', A, COLORS.std2);
+    drawAngleMark(ctx, aFVx, aFVy, CX(std1Pt.x), CYfv(std1Pt.by), 20, COLORS.std1, `\u03b8=${round1(thetaFold.mag)}\u00b0`);
+    drawAngleMark(ctx, aTVx, aTVy, CX(std2Pt.x), CYtv(std2Pt.bz), 20, COLORS.std2, `\u03c6=${round1(phiFold.mag)}\u00b0`);
+
+    // Live/current positions from the first two panels (Method A's B1(t), Method B's B2(t)),
+    // so this panel also reflects where each rotation has reached "so far" during playback.
+    function liveSet(pset, color, tag) {
+        const fx = CX(pset.x), fy = CYfv(pset.by), tx = CX(pset.x), ty = CYtv(pset.bz);
+        ctx.strokeStyle = color; ctx.lineWidth = 2.2;
+        ctx.beginPath(); ctx.moveTo(aFVx, aFVy); ctx.lineTo(fx, fy); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(aTVx, aTVy); ctx.lineTo(tx, ty); ctx.stroke();
+        ctx.fillStyle = color;
+        ctx.beginPath(); ctx.arc(fx, fy, 3.2, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(tx, ty, 3.2, 0, Math.PI * 2); ctx.fill();
+        ctx.fillText(tag + "'", fx + 5, fy - 16);
+        ctx.fillText(tag, tx + 5, ty + 22);
+    }
+    liveSet(liveB1, COLORS.liveA, 'b1');
+    liveSet(liveB2, COLORS.liveB, 'b2');
+
+    ctx.strokeStyle = COLORS.points; ctx.lineWidth = 3.4;
+    ctx.beginPath(); ctx.moveTo(aFVx, aFVy); ctx.lineTo(bFVx, bFVy); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(aTVx, aTVy); ctx.lineTo(bTVx, bTVy); ctx.stroke();
+
+    const alpha = deg(Math.atan2(Math.abs(B.by - A.ha), Math.abs(B.x) || 1e-6));
+    const beta = deg(Math.atan2(Math.abs(B.bz - A.da), Math.abs(B.x) || 1e-6));
+    drawAngleMark(ctx, aFVx, aFVy, bFVx, bFVy, 24, COLORS.points, `\u03b1=${round1(alpha)}\u00b0`);
+    drawAngleMark(ctx, aTVx, aTVy, bTVx, bTVy, 24, COLORS.points, `\u03b2=${round1(beta)}\u00b0`);
+
+    if (HT || VT) {
+        // FRONT VIEW: a single connected line through h', a', b', VT, in their true order along
+        // the (possibly extended) line, so it reads as one continuous line rather than fragments.
+        const fvPts = [{ u: 0, sx: aFVx, sy: aFVy }, { u: 1, sx: bFVx, sy: bFVy }];
+        if (HT) fvPts.push({ u: traces.uHT, sx: CX(HT.x), sy: xyY });
+        if (VT) fvPts.push({ u: traces.uVT, sx: CX(VT.x), sy: CYfv(VT.y) });
+        fvPts.sort((p, q) => p.u - q.u);
+        ctx.strokeStyle = COLORS.trace; ctx.setLineDash([4, 3]); ctx.lineWidth = 1.4;
+        ctx.beginPath();
+        fvPts.forEach((p, i) => { if (i === 0) ctx.moveTo(p.sx, p.sy); else ctx.lineTo(p.sx, p.sy); });
+        ctx.stroke(); ctx.setLineDash([]);
+
+        // TOP VIEW: a single connected line through v, a, b, HT, likewise in true order.
+        const tvPts = [{ u: 0, sx: aTVx, sy: aTVy }, { u: 1, sx: bTVx, sy: bTVy }];
+        if (VT) tvPts.push({ u: traces.uVT, sx: CX(VT.x), sy: xyY });
+        if (HT) tvPts.push({ u: traces.uHT, sx: CX(HT.x), sy: CYtv(HT.z) });
+        tvPts.sort((p, q) => p.u - q.u);
+        ctx.strokeStyle = COLORS.trace; ctx.setLineDash([4, 3]); ctx.lineWidth = 1.4;
+        ctx.beginPath();
+        tvPts.forEach((p, i) => { if (i === 0) ctx.moveTo(p.sx, p.sy); else ctx.lineTo(p.sx, p.sy); });
+        ctx.stroke(); ctx.setLineDash([]);
+    }
+
+    if (HT) {
+        const htx = CX(HT.x), hty = CYtv(HT.z), hpx = htx, hpy = xyY;
+        ctx.setLineDash([2, 2]); ctx.strokeStyle = COLORS.trace; ctx.lineWidth = 1.4;
+        ctx.beginPath(); ctx.moveTo(htx, hty); ctx.lineTo(hpx, hpy); ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = COLORS.trace;
+        ctx.beginPath(); ctx.arc(htx, hty, 3.8, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(hpx, hpy, 3.8, 0, Math.PI * 2); ctx.fill();
+        ctx.fillText('HT', htx + 6, hty + 14);
+        ctx.fillText("h'", hpx + 6, hpy - 8);
+    }
+    if (VT) {
+        const vtx = CX(VT.x), vty = CYfv(VT.y), vpx = vtx, vpy = xyY;
+        ctx.setLineDash([2, 2]); ctx.strokeStyle = COLORS.trace; ctx.lineWidth = 1.4;
+        ctx.beginPath(); ctx.moveTo(vtx, vty); ctx.lineTo(vpx, vpy); ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = COLORS.trace;
+        ctx.beginPath(); ctx.arc(vtx, vty, 3.8, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(vpx, vpy, 3.8, 0, Math.PI * 2); ctx.fill();
+        ctx.fillText('VT', vtx + 6, vty - 8);
+        ctx.fillText('v', vpx + 6, vpy + 14);
+    }
+}
+
+const combinedCanvas = document.getElementById('combinedCanvas');
+const cctx = combinedCanvas.getContext('2d');
+function renderCombined() {
+    combinedCanvas.width = combinedCanvas.parentElement.clientWidth;
+    combinedCanvas.height = combinedCanvas.parentElement.clientHeight;
+    const A = { ha: signedHa(), da: signedDa() };
+    const psiR1 = rad(psiFinalA);
+    const B = { x: PL_A * Math.cos(psiR1), by: A.ha + dy_A, bz: A.da + phiFold.sign * PL_A * Math.sin(psiR1) };
+    const pA = poseA(t), pB = poseB(t);
+    const liveB1 = { x: pA.dx, by: A.ha + pA.dy, bz: A.da + pA.dz };
+    const liveB2 = { x: pB.dx, by: A.ha + pB.dy, bz: A.da + pB.dz };
+    drawFinalOrtho(cctx, combinedCanvas.width, combinedCanvas.height, A, B, liveB1, liveB2, S.pan2d.combined);
+}
+
+function render() { render3D(); renderOrthoA(); renderOrthoB(); renderCombined(); }
+
+function onViewResize() {
+    camera3d.aspect = container3d.clientWidth / container3d.clientHeight;
+    camera3d.updateProjectionMatrix();
+    renderer3d.setSize(container3d.clientWidth, container3d.clientHeight);
+    renderOrthoA(); renderOrthoB(); renderCombined();
+}
+window.addEventListener('resize', onViewResize);
+
+recompute();
+render();
+
+function loop(now) {
+    requestAnimationFrame(loop);
+    if (playing) {
+        if (playStart === null) playStart = now - t * DURATION;
+        t = Math.min(1, (now - playStart) / DURATION);
+        scrub.value = Math.round(t * 100);
+        if (t >= 1) { setPlaying(false); playStart = null; }
+        render();
+    }
+    controls3d.update();
+    refreshLabelPositions();
+    renderer3d.render(scene, camera3d);
+}
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
