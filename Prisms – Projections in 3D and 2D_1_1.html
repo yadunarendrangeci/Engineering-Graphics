@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Prisms – Projections in 3D and 2D</title>
+<style>
+:root{--bg:#fafaf7;--fg:#1c1c1a;--mut:#6b6b66;--card:#fff;--bd:#d9d8d2;--acc:#0b5fff;--red:#c2410c;--grn:#0f766e;--hp:rgba(15,118,110,.14);--vp:rgba(11,95,255,.11);box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15161a;--fg:#ececea;--mut:#9c9c96;--card:#1f2026;--bd:#383a42;--acc:#6ea0ff;--red:#fb923c;--grn:#5eead4;--hp:rgba(94,234,212,.13);--vp:rgba(110,160,255,.13)}}
+:root[data-theme="dark"]{--bg:#15161a;--fg:#ececea;--mut:#9c9c96;--card:#1f2026;--bd:#383a42;--acc:#6ea0ff;--red:#fb923c;--grn:#5eead4;--hp:rgba(94,234,212,.13);--vp:rgba(110,160,255,.13)}
+body{margin:0;padding:12px;background:var(--bg);color:var(--fg);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:1400px;margin:0 auto}
+h1{font-size:19px;margin:4px 0 2px}.sub{color:var(--mut);font-size:13px;margin:0 0 8px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:12px;margin:10px 0}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.tabs button{flex:1 1 130px;padding:8px;border:1px solid var(--bd);background:transparent;color:var(--fg);border-radius:8px;font:inherit;cursor:pointer}
+.tabs button.on{background:var(--acc);border-color:var(--acc);color:#fff}
+.row{display:flex;flex-wrap:wrap;gap:6px 18px;align-items:center;margin:6px 0;font-size:14px}
+.row label{display:flex;align-items:center;gap:6px}
+input[type=range]{width:150px}input[type=number]{width:58px}
+select,input[type=number]{font:inherit;padding:2px 4px;background:var(--bg);color:var(--fg);border:1px solid var(--bd);border-radius:6px;max-width:100%}
+.dis{opacity:.4}
+canvas{display:block;width:100%;touch-action:none}
+.sw{display:inline-flex;align-items:center;gap:5px;margin:6px 12px 0 0;font-size:13px}.sw i{width:14px;height:14px;border-radius:3px;border:1px solid var(--fg);display:inline-block}
+.panes{display:grid;grid-template-columns:1fr 1fr;gap:10px}.panes .card{min-width:0}@media(max-width:820px){.panes{grid-template-columns:1fr}}
+.vbtn{padding:5px 10px;border:1px solid var(--bd);background:transparent;color:var(--fg);border-radius:7px;font:13px inherit;cursor:pointer}
+.vbtn:active{background:var(--acc);border-color:var(--acc);color:#fff}
+.cap{font-size:12.5px;color:var(--mut);margin:6px 0 0}
+#info{font-size:14px}#info ol{margin:6px 0 0;padding-left:20px}#info li{margin:3px 0}#info li.cur{font-weight:600}
+#qtext{font-size:14px;margin:6px 0 0;padding:8px 10px;border-left:3px solid var(--acc);background:var(--bg);border-radius:4px}
+.warn{color:var(--red)}
+fieldset{border:1px solid var(--bd);border-radius:8px;padding:8px 10px;margin:6px 0}
+legend{font-size:12.5px;color:var(--mut);padding:0 4px}
+</style></head><body><main>
+<h1>Prisms – three stages of projection</h1>
+<p class="sub">Square, pentagonal and hexagonal prism. Read the 2D drawing (left) together with the 3D view (right).</p>
+
+<div class="card">
+ <div class="row" style="margin-top:0"><label>Question <select id="preset"></select></label></div>
+ <div id="qtext"></div>
+</div>
+
+<div class="card">
+ <div class="tabs" id="types">
+  <button data-t="pr4">Square prism</button><button data-t="pr5">Pentagonal prism</button><button data-t="pr6">Hexagonal prism</button>
+ </div>
+ <div class="tabs" id="tabs">
+  <button data-s="1">Stage 1</button><button data-s="2">Stage 2</button><button data-s="3">Stage 3</button>
+ </div>
+ <div class="row">
+  <label>Base side <input id="s" type="number" min="10" max="80" value="25"></label>
+  <label>Axis <input id="h" type="number" min="20" max="120" value="60"></label>
+ </div>
+
+ <fieldset id="fsRest"><legend>Stage 2 — how the prism meets HP</legend>
+  <div class="row">
+   <label><input type="radio" name="rest" id="restEdge" value="edge"> Base edge on HP</label>
+   <label><input type="radio" name="rest" id="restCorner" value="corner"> Base corner on HP</label>
+   <label>Lift nearest point above HP <input id="lift" type="number" min="0" max="100" value="0"> mm</label>
+  </div>
+ </fieldset>
+
+ <fieldset id="fsTheta"><legend>Stage 2 — tilt angle (θ)</legend>
+  <div class="row">
+   <label><input type="radio" name="thb" id="thAxis" value="axis"> <span id="thAxisTxt">Axis ∠ HP</span></label>
+   <label><input type="radio" name="thb" id="thFace" value="face"> <span id="thFaceTxt">Rectangular face carrying the resting base edge ∠ HP</span></label>
+   <input id="theta" type="range" min="0" max="90" value="35"> <b id="thetav">35°</b>
+  </div>
+ </fieldset>
+
+ <fieldset id="fsAlpha"><legend>Stage 3 — turn about the vertical</legend>
+  <div class="row">
+   <label><input type="radio" name="ab" id="abPlan" value="plan"> Top view of axis ∠ XY</label>
+   <label><input type="radio" name="ab" id="abEdge" value="edge"> Resting base edge ∠ VP</label>
+   <input id="alpha" type="range" min="0" max="90" value="40"> <b id="alphav">40°</b>
+  </div>
+  <div class="row">
+   <label><input type="radio" name="twd" id="twdTo" value="1"> Top end of axis towards XY</label>
+   <label><input type="radio" name="twd" id="twdAway" value="0"> Top end of axis away from XY</label>
+   <label><input type="radio" name="side" id="sideR" value="1"> Leans right</label>
+   <label><input type="radio" name="side" id="sideL" value="0"> Leans left</label>
+  </div>
+ </fieldset>
+
+ <div class="row">
+  <label>Fold HP into VP plane <input id="fold" type="range" min="0" max="90" value="0"></label>
+  <label><input id="proj" type="checkbox" checked> Projectors</label>
+  <label>Face opacity <input id="op" type="range" min="0" max="100" value="45"> <b id="opv">45%</b></label>
+  <label>Point label size <input id="fs" type="range" min="10" max="30" value="13"> <b id="fsv">13px</b></label>
+  <label>3D label colour <select id="lblCol"><option value="#000000">Black</option><option value="#ffffff">White</option></select></label>
+  <label>3D label size <input id="fs3d" type="range" min="10" max="30" value="14"> <b id="fs3dv">14px</b></label>
+  <label><input id="all" type="checkbox"> All stages in 2D</label>
+ </div>
+</div>
+
+<div class="card" id="info"></div>
+
+<div class="panes">
+<div class="card">
+ <div class="row" style="margin-top:0">
+  <span style="color:var(--mut);font-size:13px">2D zoom:</span>
+  <button class="vbtn" id="z2out" type="button">−</button>
+  <button class="vbtn" id="z2in" type="button">+</button>
+  <button class="vbtn" id="z2rst" type="button">Fit</button>
+  <b id="z2v" style="font-size:13px">100%</b>
+ </div>
+ <canvas id="c2" style="cursor:grab"></canvas>
+<p class="cap">Scroll (or pinch) to zoom, drag to pan, double-click to fit. 2D shows the stage selected above; tick "All stages in 2D" to see them side by side. Front view above XY, top view below. Dashed lines are hidden. Hidden points are written in ( ): a1′(a′) means a1′ is visible and a′ lies directly behind it.</p></div>
+<div class="card">
+ <div class="row" style="margin-top:0">
+  <span style="color:var(--mut);font-size:13px">Quick view:</span>
+  <button class="vbtn" id="vFront" type="button">Front (VP)</button>
+  <button class="vbtn" id="vTop" type="button">Top (HP)</button>
+  <button class="vbtn" id="vIso" type="button">Isometric</button>
+  <span style="color:var(--mut);font-size:13px;margin-left:8px">3D zoom:</span>
+  <button class="vbtn" id="z3out" type="button">−</button>
+  <button class="vbtn" id="z3in" type="button">+</button>
+  <button class="vbtn" id="z3rst" type="button">Fit</button>
+  <b id="z3v" style="font-size:13px">100%</b>
+ </div>
+ <canvas id="c3"></canvas>
+ <div id="leg"></div>
+ <p class="cap">3D: drag to rotate, scroll (or pinch) to zoom, double-click to fit. Face opacity: 0% is a see-through wire model, 100% is solid. Teal plane = HP, blue plane = VP.</p></div>
+</div>
+</main>
+<script>
+const $=id=>document.getElementById(id),rad=d=>d*Math.PI/180,deg=r=>r*180/Math.PI;
+const TY={pr4:{n:4,nm:'Square prism'},pr5:{n:5,nm:'Pentagonal prism'},pr6:{n:6,nm:'Hexagonal prism'}};
+const FCOL=['#e11d48','#2563eb','#16a34a','#f59e0b','#9333ea','#0891b2','#db2777','#65a30d'],LT='abcdefghijkl';
+const S={type:'pr6',stage:3,restMode:'edge',lift:0,thBasis:'axis',theta:35,abBasis:'edge',alpha:40,towardXY:false,leanRight:true,s:25,h:60,fold:0,all:false,proj:true,op:45,fs:13,fs3d:14,lblCol:'#000000',yaw:.55,pit:.42};
+
+/* ---------- questions from previous papers ---------- */
+const PRE=[
+ {id:'q1',nm:'2022-23 (Scheme-1) Q3 — hexagonal prism, face 35° to HP',
+  q:'A hexagonal prism of base edge 25 mm and height 60 mm is resting on one of its base edges on HP. Draw its projections if the rectangular face carrying that base edge is inclined 35° to HP and the base edge on which it rests is inclined 40° to VP.',
+  set:{type:'pr6',s:25,h:60,restMode:'edge',thBasis:'face',theta:35,abBasis:'edge',alpha:40}},
+ {id:'q3',nm:'2020-21 (Scheme-1) Q3 — pentagonal prism, axis 45° HP',
+  q:'A pentagonal prism 30 mm base edge and 60 mm height is on HP on one of its base edges so that the axis is inclined at 45° with HP and the base edge on which it rests is inclined at 30° with VP. Draw the projections of the solid.',
+  set:{type:'pr5',s:30,h:60,restMode:'edge',thBasis:'axis',theta:45,abBasis:'edge',alpha:30}},
+ {id:'q5',nm:'2023-24 (Scheme-1) Q4 — square prism, face 40° HP',
+  q:'A square prism of base edge 30 mm and axis length 60 mm is resting on HP on one of its base edges such that the rectangular face containing the resting edge makes an angle of 40° with the HP. Draw its projections if the top view of the axis makes 30° with the VP.',
+  set:{type:'pr4',s:30,h:60,restMode:'edge',thBasis:'face',theta:40,abBasis:'plan',alpha:30}},
+ {id:'free',nm:'Free — set your own values',q:'Choose any prism, size and angles using the controls below.',set:{}}
+];
+let preset='q1';
+
+const sub=(a,b)=>a.map((v,i)=>v-b[i]),dot=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
+let M;
+
+/* ---------- topology ---------- */
+function topo(){
+ const N=TY[S.type].n;
+ const F=[[...Array(N).keys()],[...Array(N).keys()].map(k=>N+k)],fc=[0,1];
+ for(let k=0;k<N;k++){const k1=(k+1)%N;F.push([k,k1,N+k1,N+k]);fc.push(2+k)}
+ const bn=k=>LT[k],tn=k=>LT[k]+'1';
+ const leg=[{c:0,t:'Base  '+[...Array(N).keys()].map(bn).join(' ')},{c:1,t:'Top  '+[...Array(N).keys()].map(tn).join(' ')}];
+ for(let k=0;k<N;k++){const k1=(k+1)%N;leg.push({c:2+k,t:'Face  '+bn(k)+' '+bn(k1)+' '+tn(k1)+' '+tn(k)})}
+ const m={};F.forEach((f,i)=>f.forEach((a,j)=>{const b=f[(j+1)%f.length],lo=Math.min(a,b),hi=Math.max(a,b),key=lo+'-'+hi;(m[key]=m[key]||{a:lo,b:hi,f:[]}).f.push(i)}));
+ const E=Object.values(m);
+ const lab=[];for(let k=0;k<N;k++)lab.push({i:k,n:bn(k)});for(let k=0;k<N;k++)lab.push({i:N+k,n:tn(k)});
+ const vf=lab.map(l=>F.reduce((a,f,j)=>(f.includes(l.i)&&a.push(j),a),[]));
+ M={N,F,fc,leg,E,lab,vf,ax0:2*N,ax1:2*N+1,restFace:2+(N-1)};
+}
+
+/* ---------- geometry ---------- */
+const FIT=(P,zFloor)=>{const m=12,a=Math.min(...P.map(p=>p[0])),b=Math.min(...P.map(p=>p[1])),z=Math.min(...P.map(p=>p[2]));
+ return P.map(p=>[p[0]-a,p[1]-b+m,p[2]-z+zFloor])};
+function tilt(){ // phi = rotation from vertical, axisHP = axis angle with HP (degrees)
+ /* axis and the rectangular face on the resting edge make the same angle with HP */ const phi=90-S.theta;return{phi,axisHP:90-phi};
+}
+function turn(){ // returns b = angle of axis plan with XY (degrees) and notes
+ const {axisHP}=tilt();let b,warn='';
+ if(S.abBasis==='plan')b=S.alpha;
+ else if(S.abBasis==='edge')b=90-S.alpha;
+ else{const c=Math.cos(rad(axisHP));
+  if(c<1e-6){b=0;warn='Axis is vertical, so it is parallel to VP whatever the turn — the true angle with VP is 0°.'}
+  else{let v=Math.sin(rad(S.alpha))/c;if(v>1+1e-9){warn=`Not possible: axis ∠HP + axis ∠VP = ${axisHP}° + ${S.alpha}° exceeds 90°. Showing the limit (plan ⟂ XY).`;v=1}b=deg(Math.asin(Math.min(1,v)))}}
+ const trueVP=deg(Math.asin(Math.cos(rad(axisHP))*Math.sin(rad(b))));
+ return{b,warn,trueVP};
+}
+function stages(){
+ const N=TY[S.type].n,s=S.s,h=S.h,R=s/(2*Math.sin(Math.PI/N));
+ const off=S.restMode==='edge'?Math.PI/N:0;
+ const base=[...Array(N)].map((_,k)=>{const a=off+k*2*Math.PI/N;return[R*Math.cos(a),R*Math.sin(a)]});
+ const P0=[...base.map(p=>[p[0],p[1],0]),...base.map(p=>[p[0],p[1],h]),[0,0,0],[0,0,h]];
+ const px=Math.max(...base.map(p=>p[0]));
+ const phi=rad(tilt().phi),c=Math.cos(phi),n=Math.sin(phi); // tips over the resting edge/corner towards +X
+ const R2=P0.map(([x,y,z])=>{const d=x-px;return[px+d*c+z*n,y,-d*n+z*c]});
+ const b=rad(turn().b),sg=S.towardXY?-1:1,cb=Math.cos(b),sb=Math.sin(b)*sg;
+ let R3=R2.map(([x,y,z])=>[x*cb-y*sb,x*sb+y*cb,z]);
+ if(!S.leanRight)R3=R3.map(([x,y,z])=>[-x,y,z]);
+ return[FIT(P0,0),FIT(R2,S.lift),FIT(R3,S.lift)];
+}
+function normals(P){
+ const c=[0,1,2].map(i=>(P[M.ax0][i]+P[M.ax1][i])/2);
+ return M.F.map(f=>{let n=[0,0,0],mid=[0,0,0];const L=f.length;
+  f.forEach((a,j)=>{const A=P[a],B=P[f[(j+1)%L]];n[0]+=(A[1]-B[1])*(A[2]+B[2]);n[1]+=(A[2]-B[2])*(A[0]+B[0]);n[2]+=(A[0]-B[0])*(A[1]+B[1]);for(let i=0;i<3;i++)mid[i]+=A[i]/L});
+  if(dot(n,sub(mid,c))<0)n=n.map(v=>-v);const l=Math.hypot(...n)||1;return n.map(v=>v/l)});
+}
+function edgeSpec(NR,ax){return M.E.map(e=>({a:e.a,b:e.b,vis:Math.max(...e.f.map(i=>NR[i][ax]))>1e-6}))}
+const visV=(NR,ax)=>M.lab.map((l,j)=>M.vf[j].some(f=>NR[f][ax]>1e-6));
+
+/* ---------- drawing helpers ---------- */
+function pal(){const s=getComputedStyle(document.documentElement),v=n=>s.getPropertyValue(n).trim();return{fg:v('--fg'),mut:v('--mut'),acc:v('--acc'),red:v('--red'),grn:v('--grn'),hp:v('--hp'),vp:v('--vp')}}
+function fit(cv,r){const w=Math.max(280,cv.parentElement.clientWidth-24),h=Math.round(w*r),d=window.devicePixelRatio||1;
+ cv.width=w*d;cv.height=h*d;cv.style.width=w+'px';cv.style.height=h+'px';
+ const g=cv.getContext('2d');g.setTransform(d,0,0,d,0,0);g.font='13px system-ui,sans-serif';return[w,h,g]}
+function drawEdges(g,P,f,col,spec){
+ [false,true].forEach(v=>{g.setLineDash(v?[]:[5,4]);g.strokeStyle=col;g.lineWidth=1.8;g.beginPath();let any=0;
+  spec.forEach(e=>{if(e.vis===v){any=1;const a=f(P[e.a]),b=f(P[e.b]);g.moveTo(a[0],a[1]);g.lineTo(b[0],b[1])}});if(any)g.stroke()});g.setLineDash([])}
+function axisLn(g,P,f,col){const a=f(P[M.ax0]),b=f(P[M.ax1]);g.setLineDash([9,3,2,3]);g.strokeStyle=col;g.lineWidth=1;g.beginPath();g.moveTo(a[0],a[1]);g.lineTo(b[0],b[1]);g.stroke();g.setLineDash([])}
+function poly(g,pts,fill,stroke){g.beginPath();pts.forEach((p,i)=>i?g.lineTo(p[0],p[1]):g.moveTo(p[0],p[1]));g.closePath();g.fillStyle=fill;g.fill();g.strokeStyle=stroke;g.lineWidth=1;g.stroke()}
+function labels(g,pt,suffix,col,vis){
+ const pts=M.lab.map(l=>pt(l.i)),cen=[0,1].map(k=>pts.reduce((s,p)=>s+p[k],0)/pts.length),grp={},f=S.fs;
+ M.lab.forEach((l,j)=>{const p=pts[j],key=Math.round(p[0]/3)+','+Math.round(p[1]/3),o=(grp[key]=grp[key]||{p,v:[],h:[]});(vis[j]?o.v:o.h).push(l.n+suffix)});
+ g.fillStyle=col;g.textAlign='center';g.font=f+'px system-ui,sans-serif';
+ Object.values(grp).forEach(o=>{const dx=o.p[0]-cen[0],dy=o.p[1]-cen[1],l=Math.hypot(dx,dy)||1;
+  const t=o.v.join(',')+(o.h.length?'('+o.h.join(',')+')':'');
+  g.fillText(t,o.p[0]+dx/l*(f+4),o.p[1]+dy/l*f+f*.3)});
+}
+
+/* ---------- 2D ---------- */
+function draw2D(){
+ const[W,H,g]=fit($('c2'),.8),c=pal(),st=stages(),list=S.all?[0,1,2]:[S.stage-1];
+ let off=0;const it=list.map(i=>{const P=st[i],a=Math.min(...P.map(p=>p[0])),b=Math.max(...P.map(p=>p[0]));const o={i,P,dx:off-a,a,b};off+=b-a+28;return o});
+ const tot=off-28,zm=Math.max(...it.flatMap(o=>o.P.map(p=>p[2]))),ym=Math.max(...it.flatMap(o=>o.P.map(p=>p[1])));
+ const pad=28+S.fs*1.5,avail=H-2*pad-14,k=Math.min((W-2*pad)/tot,avail/(zm+ym),6),x0=(W-k*tot)/2,y0=pad+(avail-k*(zm+ym))/2+k*zm;
+ const Z=ZM.c2,zp=([x,y])=>[x*Z.k+Z.ox,y*Z.k+Z.oy],yx=zp([0,y0])[1];
+ g.strokeStyle=c.fg;g.lineWidth=1.4;g.beginPath();g.moveTo(8,yx);g.lineTo(W-8,yx);g.stroke();
+ g.fillStyle=c.fg;g.font='bold 14px system-ui,sans-serif';g.textAlign='left';g.fillText('X',10,yx-6);g.textAlign='right';g.fillText('Y',W-10,yx-6);
+ g.font='12px system-ui,sans-serif';g.fillStyle=c.mut;g.textAlign='left';g.fillText('VP · front view (above XY)',10,14);g.fillText('HP · top view (below XY)',10,H-26);
+ it.forEach(o=>{
+  const P=o.P,NR=normals(P),FX=p=>x0+k*(p[0]+o.dx),fv=p=>zp([FX(p),y0-k*p[2]]),tv=p=>zp([FX(p),y0+k*p[1]]);
+  if(S.proj){g.setLineDash([2,3]);g.strokeStyle=c.mut;g.lineWidth=.6;g.beginPath();M.lab.forEach(l=>{const p=P[l.i];g.moveTo(fv(p)[0],fv(p)[1]);g.lineTo(tv(p)[0],tv(p)[1])});g.stroke();g.setLineDash([])}
+  drawEdges(g,P,fv,c.acc,edgeSpec(NR,1));axisLn(g,P,fv,c.acc);
+  drawEdges(g,P,tv,c.grn,edgeSpec(NR,2));axisLn(g,P,tv,c.grn);
+  labels(g,i=>fv(P[i]),"′",c.acc,visV(NR,1));labels(g,i=>tv(P[i]),'',c.grn,visV(NR,2));
+  g.fillStyle=c.fg;g.textAlign='center';g.font='bold 13px system-ui,sans-serif';g.fillText('Stage '+(o.i+1),zp([x0+k*((o.a+o.b)/2+o.dx),0])[0],H-8);
+ });
+}
+
+/* ---------- 3D ---------- */
+function draw3D(){
+ const[W,H,g]=fit($('c3'),.8),c=pal(),P=stages()[S.stage-1];
+ const x0=Math.min(...P.map(p=>p[0]))-30,x1=Math.max(...P.map(p=>p[0]))+30,ZH=Math.max(...P.map(p=>p[2]))+30,YD=Math.max(...P.map(p=>p[1]))+30;
+ const cy=Math.cos(S.yaw),sy=Math.sin(S.yaw),cp=Math.cos(S.pit),sp=Math.sin(S.pit),ct=Math.cos(rad(S.fold)),st=Math.sin(rad(S.fold));
+ const L=Math.hypot(x1-x0,YD,ZH)*(1+S.fold/300),k=Math.min(W,H)*.95/L,xc=(x0+x1)/2,zc=(ZH-YD*st)/2,yc=YD*ct/2;
+ const pr=([x,y,z])=>{const X=x-xc,Yv=z-zc,Zv=y-yc,X1=X*cy+Zv*sy,Z1=-X*sy+Zv*cy,Y2=Yv*cp-Z1*sp,Z2=Yv*sp+Z1*cp;const Z=ZM.c3;return[(W/2+k*X1)*Z.k+Z.ox,(H/2-k*Y2)*Z.k+Z.oy,Z2]};
+ const hp=(x,y)=>[x,y*ct,-y*st];
+ poly(g,[[x0,0,0],[x1,0,0],[x1,0,ZH],[x0,0,ZH]].map(pr),c.vp,c.acc);
+ poly(g,[hp(x0,0),hp(x1,0),hp(x1,YD),hp(x0,YD)].map(pr),c.hp,c.grn);
+ g.strokeStyle=c.fg;g.lineWidth=1.6;g.beginPath();const a=pr([x0,0,0]),b=pr([x1,0,0]);g.moveTo(a[0],a[1]);g.lineTo(b[0],b[1]);g.stroke();
+ g.font='bold 13px system-ui,sans-serif';g.fillStyle=c.acc;g.textAlign='left';let q=pr([x0,0,ZH]);g.fillText('VP',q[0]+4,q[1]+14);
+ g.fillStyle=c.grn;q=pr(hp(x0,YD));g.fillText('HP',q[0]+4,q[1]-6);g.fillStyle=c.fg;
+ let qx=pr([x0,0,0]);g.textAlign='right';g.fillText('X',qx[0]-6,qx[1]-5);
+ let qy=pr([x1,0,0]);g.textAlign='left';g.fillText('Y',qy[0]+6,qy[1]-5);
+ const NR=normals(P),fvp=p=>pr([p[0],0,p[2]]),tvp=p=>pr(hp(p[0],p[1]));
+ if(S.proj){g.setLineDash([2,3]);g.strokeStyle=c.mut;g.lineWidth=.7;g.beginPath();
+  M.lab.forEach(l=>{const p=P[l.i],v=pr(p),f=fvp(p),t=tvp(p);
+   if(S.fold===0){g.moveTo(v[0],v[1]);g.lineTo(f[0],f[1]);g.moveTo(v[0],v[1]);g.lineTo(t[0],t[1])}
+   else{g.moveTo(f[0],f[1]);g.lineTo(t[0],t[1])}});g.stroke();g.setLineDash([])}
+ drawEdges(g,P,fvp,c.acc,edgeSpec(NR,1));drawEdges(g,P,tvp,c.grn,edgeSpec(NR,2));
+ axisLn(g,P,fvp,c.acc);axisLn(g,P,tvp,c.grn);
+ const pp=P.map(pr);
+ M.F.map((f,i)=>({f,i,z:f.reduce((s,j)=>s+pp[j][2],0)/f.length})).sort((u,v)=>u.z-v.z).forEach(o=>{
+  g.beginPath();o.f.forEach((j,n)=>n?g.lineTo(pp[j][0],pp[j][1]):g.moveTo(pp[j][0],pp[j][1]));g.closePath();
+  g.globalAlpha=S.op/100;g.fillStyle=FCOL[M.fc[o.i]%8];g.fill();g.globalAlpha=1;
+  g.strokeStyle=c.fg;g.lineWidth=1.6;g.stroke();
+ });
+ axisLn(g,P,pr,c.red);
+ g.fillStyle=S.lblCol;g.textAlign='center';g.font=S.fs3d+'px system-ui,sans-serif';
+ M.lab.forEach(l=>g.fillText(l.n,pp[l.i][0]+S.fs3d*.7,pp[l.i][1]-S.fs3d*.45));
+}
+
+/* ---------- explanation ---------- */
+function info(){
+ const T=TY[S.type],N=T.n,last=LT[N-1],{axisHP}=tilt(),tr=turn(),f1=x=>(+x.toFixed(1))+'°';
+ const edge=S.restMode==='edge',re=`a${last}`;
+ const st1=`<b>Stage 1 – ${T.nm} standing on its base on HP.</b> Draw the top view first: the true shape of the base, with ${edge?`resting edge ${re} perpendicular to XY (so in the front view it shows as the point a′(${last}′) on the right)`:`corner a on the right, the two base edges through a equally inclined to XY`}. Project up for the front view: a rectangle ${S.h} mm high (true axis length).`;
+ const faceNote=edge?` The rectangular face ${re}-${last}1-a1 contains the resting edge and is parallel to the axis, so it is inclined at the same ${f1(axisHP)} to HP.`:` The longer edges are parallel to the axis, so the one through corner a is also at ${f1(axisHP)} to HP.`;
+ const byFace=edge&&S.thBasis==='face';
+ const st2=byFace
+  ?`<b>Stage 2 – tip the stage-1 front view about a′(${last}′)</b> until the rectangular face ${re}-${last}1-a1 (seen edge-on as the line a′-a1′) makes <b>${f1(axisHP)}</b> with HP. This face contains the resting edge and is parallel to the axis, so the axis is also at ${f1(axisHP)} to HP (base at ${f1(90-axisHP)}). ${S.lift?`The nearest point is held ${S.lift} mm above HP.`:''} Project down: each top-view point keeps its distance from XY from stage 1.`
+  :`<b>Stage 2 – tip the stage-1 front view about ${edge?`a′(${last}′)`:'a′'}</b> until the axis makes <b>${f1(axisHP)}</b> with HP (base at ${f1(90-axisHP)}).${faceNote} ${S.lift?`The nearest point is held ${S.lift} mm above HP.`:''} Project down: each top-view point keeps its distance from XY from stage 1.`;
+ let how;
+ if(S.abBasis==='edge')how=`The resting edge ${re} lies on HP, so its top view shows its <b>true</b> angle with VP: draw it at ${f1(S.alpha)} to XY. The axis plan is perpendicular to it, at ${f1(tr.b)} to XY.`;
+ else if(S.abBasis==='plan')how=`Redraw the stage-2 top view so that the top view of the axis is at ${f1(tr.b)} to XY.`;
+ else how=`The axis is to make a true angle φ = ${f1(S.alpha)} with VP. Its top view must then make α with XY where sin α = sin φ / cos θ = sin ${S.alpha}° / cos ${f1(axisHP)} → <b>α = ${f1(tr.b)}</b>. (Or find α graphically: the locus method with the axis as a line of true length ${S.h} mm.)`;
+ const st3=`<b>Stage 3 – turn the stage-2 top view about a vertical axis</b> (shape unchanged). ${how} Project up from it; heights of all points are taken from the stage-2 front view. Result: axis plan ${f1(tr.b)} to XY, true axis angle with VP = ${f1(tr.trueVP)}${edge?`, resting edge at ${f1(90-tr.b)} to VP`:''}.${tr.warn?` <span class="warn">${tr.warn}</span>`:''}`;
+ return'<ol>'+[st1,st2,st3].map((t,i)=>`<li class="${i+1===S.stage?'cur':''}">${t}</li>`).join('')+'</ol>';
+}
+
+/* ---------- UI ---------- */
+function render(){
+ topo();
+ const edge=S.restMode==='edge';
+ if(!edge&&S.abBasis==='edge')S.abBasis='plan';
+ document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',+b.dataset.s===S.stage));
+ document.querySelectorAll('#types button').forEach(b=>b.classList.toggle('on',b.dataset.t===S.type));
+ $('s').value=S.s;$('h').value=S.h;$('lift').value=S.lift;
+ $('restEdge').checked=edge;$('restCorner').checked=!edge;
+ if(!edge&&S.thBasis==='face')S.thBasis='axis';$('thFace').disabled=!edge;$('thFaceTxt').parentElement.style.opacity=edge?1:.45;
+ $('thAxisTxt').textContent=edge?'Axis ∠ HP':'Axis ∠ HP  (= longer edge through the resting corner ∠ HP)';
+ $('thAxis').checked=S.thBasis==='axis';$('thFace').checked=S.thBasis==='face';
+ $('theta').value=S.theta;$('thetav').textContent=S.theta+'°';
+ $('abPlan').checked=S.abBasis==='plan';$('abEdge').checked=S.abBasis==='edge';if(S.abBasis==='true')S.abBasis='plan';$('abEdge').disabled=!edge;
+ $('alpha').value=S.alpha;$('alphav').textContent=S.alpha+'°';
+ $('twdTo').checked=S.towardXY;$('twdAway').checked=!S.towardXY;
+ $('sideR').checked=S.leanRight;$('sideL').checked=!S.leanRight;
+ $('all').checked=S.all;
+ $('fsRest').classList.toggle('dis',S.stage<2);$('fsTheta').classList.toggle('dis',S.stage<2);$('fsAlpha').classList.toggle('dis',S.stage<3);
+ $('lblCol').value=S.lblCol;$('fs3d').value=S.fs3d;$('fs3dv').textContent=S.fs3d+'px';
+ $('preset').value=preset;$('qtext').textContent=PRE.find(p=>p.id===preset).q;
+ $('leg').innerHTML=M.leg.map(o=>`<span class="sw"><i style="background:${FCOL[o.c%8]}"></i>${o.t}</span>`).join('');
+ $('info').innerHTML=info();
+ draw3D();draw2D();
+}
+$('preset').innerHTML=PRE.map(p=>`<option value="${p.id}">${p.nm}</option>`).join('');
+$('preset').onchange=e=>{preset=e.target.value;Object.assign(S,PRE.find(p=>p.id===preset).set);render()};
+const ch=fn=>e=>{fn(e);render()};
+document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>{S.stage=+b.dataset.s;Object.assign(ZM.c2,{k:1,ox:0,oy:0});$('z2v').textContent='100%';render()});
+document.querySelectorAll('#types button').forEach(b=>b.onclick=()=>{S.type=b.dataset.t;render()});
+document.querySelectorAll('input[name=rest]').forEach(r=>r.onchange=ch(()=>S.restMode=r.value));
+document.querySelectorAll('input[name=thb]').forEach(r=>r.onchange=ch(()=>S.thBasis=r.value));
+document.querySelectorAll('input[name=ab]').forEach(r=>r.onchange=ch(()=>S.abBasis=r.value));
+document.querySelectorAll('input[name=twd]').forEach(r=>r.onchange=ch(()=>S.towardXY=r.value==='1'));
+document.querySelectorAll('input[name=side]').forEach(r=>r.onchange=ch(()=>S.leanRight=r.value==='1'));
+$('lift').onchange=ch(e=>S.lift=Math.max(0,Math.min(100,+e.target.value||0)));
+$('theta').oninput=ch(e=>S.theta=+e.target.value);
+$('alpha').oninput=ch(e=>S.alpha=+e.target.value);
+$('fold').oninput=ch(e=>S.fold=+e.target.value);
+$('proj').onchange=ch(e=>S.proj=e.target.checked);
+$('all').onchange=ch(e=>S.all=e.target.checked);
+$('lblCol').onchange=e=>{S.lblCol=e.target.value;draw3D()};
+$('fs3d').oninput=e=>{S.fs3d=+e.target.value;$('fs3dv').textContent=S.fs3d+'px';draw3D()};
+$('op').oninput=e=>{S.op=+e.target.value;$('opv').textContent=S.op+'%';draw3D()};
+$('fs').oninput=e=>{S.fs=+e.target.value;$('fsv').textContent=S.fs+'px';draw2D()};
+['s','h'].forEach(id=>$(id).onchange=e=>{const el=e.target,v=Math.min(+el.max,Math.max(+el.min,+el.value||+el.min));S[id]=v;render()});
+/* ---------- separate zoom for 2D and 3D: wheel / pinch / buttons ---------- */
+const ZM={c2:{k:1,ox:0,oy:0},c3:{k:1,ox:0,oy:0}},DRAW={c2:()=>draw2D(),c3:()=>draw3D()};
+function zoomAt(id,f,mx,my){const z=ZM[id],cv=$(id);if(mx==null){mx=cv.clientWidth/2;my=cv.clientHeight/2}
+ const k=Math.max(.3,Math.min(12,z.k*f));f=k/z.k;z.ox=mx-(mx-z.ox)*f;z.oy=my-(my-z.oy)*f;z.k=k;
+ $(id==='c2'?'z2v':'z3v').textContent=Math.round(k*100)+'%';DRAW[id]()}
+function zoomReset(id){Object.assign(ZM[id],{k:1,ox:0,oy:0});$(id==='c2'?'z2v':'z3v').textContent='100%';DRAW[id]()}
+['c2','c3'].forEach(id=>{const cv=$(id),pts=new Map();let pinch=null;
+ cv.addEventListener('wheel',e=>{e.preventDefault();const r=cv.getBoundingClientRect();zoomAt(id,Math.exp(-e.deltaY*.0015),e.clientX-r.left,e.clientY-r.top)},{passive:false});
+ cv.addEventListener('dblclick',()=>zoomReset(id));
+ cv.addEventListener('pointerdown',e=>{cv.setPointerCapture(e.pointerId);pts.set(e.pointerId,[e.clientX,e.clientY]);pinch=null;if(id==='c2')cv.style.cursor='grabbing'});
+ cv.addEventListener('pointermove',e=>{if(!pts.has(e.pointerId))return;const prev=pts.get(e.pointerId);pts.set(e.pointerId,[e.clientX,e.clientY]);
+  if(pts.size>=2){const[a,b]=[...pts.values()],d=Math.hypot(a[0]-b[0],a[1]-b[1]),r=cv.getBoundingClientRect();
+   if(pinch)zoomAt(id,d/pinch,(a[0]+b[0])/2-r.left,(a[1]+b[1])/2-r.top);pinch=d;return}
+  const dx=e.clientX-prev[0],dy=e.clientY-prev[1];
+  if(id==='c2'){ZM.c2.ox+=dx;ZM.c2.oy+=dy;draw2D()}
+  else{S.yaw+=dx*.01;S.pit=Math.max(-1.55,Math.min(1.55,S.pit+dy*.01));draw3D()}});
+ const up=e=>{pts.delete(e.pointerId);pinch=null;if(id==='c2')cv.style.cursor='grab'};
+ cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
+});
+$('z2in').onclick=()=>zoomAt('c2',1.25);$('z2out').onclick=()=>zoomAt('c2',.8);$('z2rst').onclick=()=>zoomReset('c2');
+$('z3in').onclick=()=>zoomAt('c3',1.25);$('z3out').onclick=()=>zoomAt('c3',.8);$('z3rst').onclick=()=>zoomReset('c3');
+$('vFront').onclick=()=>{S.yaw=0;S.pit=0;draw3D()};
+$('vTop').onclick=()=>{S.yaw=0;S.pit=Math.PI/2;draw3D()};
+$('vIso').onclick=()=>{S.yaw=.55;S.pit=.42;draw3D()};
+addEventListener('resize',render);
+matchMedia('(prefers-color-scheme:dark)').addEventListener('change',render);
+Object.assign(S,PRE[0].set);render();
+</script></body></html>
