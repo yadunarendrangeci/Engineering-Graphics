@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Isometric Projection of Cube</title>
+<style>
+:root{--bg:#fafaf7;--fg:#1c1c1a;--mut:#6b6b66;--card:#fff;--bd:#d9d8d2;--acc:#0b5fff;--red:#c2410c;--grn:#0f766e;--sec:#dc2626;--dim:#7c3aed}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15161a;--fg:#ececea;--mut:#9c9c96;--card:#1f2026;--bd:#383a42;--acc:#6ea0ff;--red:#fb923c;--grn:#5eead4;--sec:#f87171;--dim:#c4b5fd}}
+:root[data-theme="dark"]{--bg:#15161a;--fg:#ececea;--mut:#9c9c96;--card:#1f2026;--bd:#383a42;--acc:#6ea0ff;--red:#fb923c;--grn:#5eead4;--sec:#f87171;--dim:#c4b5fd}
+*{box-sizing:border-box}
+body{margin:0;padding:12px;background:var(--bg);color:var(--fg);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:1400px;margin:0 auto}
+h1{font-size:19px;margin:4px 0 2px}.sub{color:var(--mut);font-size:13px;margin:0 0 8px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:12px;margin:10px 0}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.tabs button{flex:1 1 160px;padding:8px;border:1px solid var(--bd);background:transparent;color:var(--fg);border-radius:8px;font:inherit;cursor:pointer}
+.tabs button.on{background:var(--acc);border-color:var(--acc);color:#fff}
+.row{display:flex;flex-wrap:wrap;gap:6px 18px;align-items:center;margin:6px 0;font-size:14px}
+.row label{display:flex;align-items:center;gap:6px}
+input[type=range]{width:160px}input[type=number]{width:60px;font:inherit;padding:2px 4px;background:var(--bg);color:var(--fg);border:1px solid var(--bd);border-radius:6px}
+canvas{display:block;width:100%;touch-action:none}
+.panes{display:grid;grid-template-columns:1fr 1fr;gap:10px}.panes .card{min-width:0}@media(max-width:820px){.panes{grid-template-columns:1fr}}
+.vbtn{padding:5px 10px;border:1px solid var(--bd);background:transparent;color:var(--fg);border-radius:7px;font:13px inherit;cursor:pointer}
+.vbtn:active{background:var(--acc);border-color:var(--acc);color:#fff}
+.cap{font-size:12.5px;color:var(--mut);margin:6px 0 0}
+#info{font-size:14px}#info ol{margin:6px 0 0;padding-left:20px}#info li{margin:3px 0;color:var(--mut)}#info li.done{color:var(--fg)}#info li.cur{color:var(--fg);font-weight:600}
+#qtext{font-size:14px;padding:8px 10px;border-left:3px solid var(--acc);background:var(--bg);border-radius:4px}
+</style></head><body><main>
+<h1>Isometric projection of a cube</h1>
+<p class="sub">The isometric projection of a cube is its front view when it rests on a corner with a body diagonal perpendicular to VP. 2D construction on the left, 3D model on the right.</p>
+<div class="card"><div id="qtext"></div></div>
+<div class="card">
+ <div class="tabs" id="steps">
+  <button data-s="0">Stage 1 · Cube on HP, faces at 45° to VP</button><button data-s="1">Stage 2 · Tilt until body diagonal ∥ HP</button><button data-s="2">Stage 3 · Body diagonal ⟂ VP (isometric)</button>
+ </div>
+ <div class="row">
+  <label>Edge of cube <input id="a" type="number" min="15" max="80" value="32"> mm</label>
+  <label>Animate stages <input id="t" type="range" min="0" max="200" value="200"> <b id="tv"></b></label>
+  <button class="vbtn" id="play" type="button">▶ Play 1 → 3</button>
+  <label><input id="proj" type="checkbox" checked> Projectors</label>
+  <label><input id="diag" type="checkbox" checked> Body diagonal</label>
+  <label>Labels <input id="fs" type="range" min="10" max="22" value="13"></label>
+ </div>
+</div>
+<div class="card" id="info"></div>
+<div class="panes">
+<div class="card">
+ <div class="row" style="margin-top:0"><b style="font-size:14px">2D construction</b>
+  <button class="vbtn" id="z2out" type="button">−</button><button class="vbtn" id="z2in" type="button">+</button><button class="vbtn" id="z2rst" type="button">Fit</button></div>
+ <canvas id="c2"></canvas>
+ <p class="cap">Front views above XY, top views below. Dashed = hidden edges; red dash-dot = body diagonal; thin dotted = projectors. Scroll or pinch to zoom, drag to pan, double-click to fit.</p>
+</div>
+<div class="card">
+ <div class="row" style="margin-top:0"><b style="font-size:14px">3D model</b>
+  <button class="vbtn" id="vIso" type="button">Isometric</button><button class="vbtn" id="vFront" type="button">Front (VP)</button><button class="vbtn" id="vTop" type="button">Top (HP)</button>
+  <button class="vbtn" id="z3out" type="button">−</button><button class="vbtn" id="z3in" type="button">+</button>
+  <label style="font-size:13px"><input id="shad" type="checkbox" checked> Views on VP/HP</label></div>
+ <canvas id="c3"></canvas>
+ <p class="cap">Drag to rotate, scroll or pinch to zoom, double-click to reset. Blue = VP, teal = HP. The front view (blue) is drawn on VP and the top view (teal) on HP. At stage 3 click "Front (VP)": the cube looks exactly like its isometric projection, a regular hexagon.</p>
+</div>
+</div>
+</main>
+<script>
+const $=id=>document.getElementById(id),rad=d=>d*Math.PI/180,LT='abcdefgh',PHI=Math.atan(1/Math.SQRT2);
+const S={a:32,t:2,step:2,proj:true,diag:true,fs:13,shad:true,yaw:-.55,pit:.38,z3:1,Z2:{k:1,ox:0,oy:0}};
+const sub=(a,b)=>a.map((v,i)=>v-b[i]),add=(a,b)=>a.map((v,i)=>v+b[i]),dot=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2],cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],
+ nrm=a=>{const l=Math.hypot(...a)||1;return a.map(v=>v/l)},cen=P=>P.reduce((s,p)=>add(s,p.map(v=>v/P.length)),[0,0,0]);
+const FACES=[[0,1,2,3],[4,5,6,7],[0,1,5,4],[1,2,6,5],[2,3,7,6],[3,0,4,7]],EDGES=[[0,1],[1,2],[2,3],[3,0],[4,5],[5,6],[6,7],[7,4],[0,4],[1,5],[2,6],[3,7]];
+let Y0=0;
+function stage(t){ // t in [0,2]: 0 = stage 1, 1 = stage 2, 2 = stage 3 (before y shift)
+ const a=S.a,r=a/Math.SQRT2,xy=[[-r,0],[0,-r],[r,0],[0,r]];
+ let P=[...xy.map(([x,y])=>[x,y,a]),...xy.map(([x,y])=>[x,y,0])];
+ const g=P[6].slice(),b1=PHI*Math.min(1,t),cb=Math.cos(b1),sb=Math.sin(b1);
+ P=P.map(([x,y,z])=>{const dx=x-g[0],dz=z-g[2];return[g[0]+dx*cb+dz*sb,y,g[2]-dx*sb+dz*cb]});
+ const a2=Math.PI/2*Math.max(0,t-1),ca=Math.cos(a2),sa=Math.sin(a2);
+ P=P.map(([x,y,z])=>{const dx=x-g[0],dy=y-g[1];return[g[0]+dx*ca-dy*sa,g[1]+dx*sa+dy*ca,z]});
+ return P}
+function prep(){const m=Math.min(...[0,1,2].flatMap(t=>stage(t).map(p=>p[1])));Y0=S.a*.45+10-m}
+const ptsAt=t=>stage(t).map(p=>[p[0],p[1]+Y0,p[2]]);
+function faceNormals(P){const c=cen(P);return FACES.map(F=>{const Q=F.map(i=>P[i]);let n=nrm(cross(sub(Q[1],Q[0]),sub(Q[2],Q[0])));if(dot(n,sub(cen(Q),c))<0)n=n.map(v=>-v);return n})}
+
+/* ---------- helpers ---------- */
+function pal(){const s=getComputedStyle(document.documentElement),v=n=>s.getPropertyValue(n).trim();return{fg:v('--fg'),mut:v('--mut'),acc:v('--acc'),grn:v('--grn'),sec:v('--sec'),dim:v('--dim'),red:v('--red')}}
+function fit(cv,r){const w=Math.max(280,cv.parentElement.clientWidth-24),h=Math.round(w*r),d=window.devicePixelRatio||1;
+ cv.width=w*d;cv.height=h*d;cv.style.width=w+'px';cv.style.height=h+'px';const g=cv.getContext('2d');g.setTransform(d,0,0,d,0,0);return[w,h,g]}
+function line(g,a,b,col,w,dash){g.setLineDash(dash||[]);g.strokeStyle=col;g.lineWidth=w;g.beginPath();g.moveTo(a[0],a[1]);g.lineTo(b[0],b[1]);g.stroke();g.setLineDash([])}
+function edgesView(g,P,N,ax,map,col,w){EDGES.forEach(([i,j])=>{const fs=FACES.map((F,k)=>k).filter(k=>FACES[k].includes(i)&&FACES[k].includes(j));const vis=Math.max(...fs.map(k=>N[k][ax]))>1e-6;line(g,map(P[i]),map(P[j]),col,vis?w:w*.75,vis?[]:[5,4])})}
+function labelsView(g,P,N,ax,map,col,fmt,c0){const f=S.fs,grp={},cc=map(c0);
+ P.forEach((p,i)=>{const s=map(p),vis=FACES.some((F,k)=>F.includes(i)&&N[k][ax]>1e-6),key=Math.round(s[0]/3)+','+Math.round(s[1]/3),q=(grp[key]=grp[key]||{s,v:[],h:[]});(vis?q.v:q.h).push(fmt(i))});
+ g.fillStyle=col;g.font=f+'px system-ui,sans-serif';g.textAlign='center';
+ Object.values(grp).forEach(o=>{const dx=o.s[0]-cc[0],dy=o.s[1]-cc[1],l=Math.hypot(dx,dy)||1,t=[...o.v,...o.h].join(',');g.fillText(t,o.s[0]+dx/l*(f+6),o.s[1]+dy/l*(f+2)+f*.35)})}
+function dimLine(g,a,b,off,txt,col){const dx=b[0]-a[0],dy=b[1]-a[1],l=Math.hypot(dx,dy)||1,nx=-dy/l,ny=dx/l,A=[a[0]+nx*off,a[1]+ny*off],B2=[b[0]+nx*off,b[1]+ny*off];
+ line(g,a,A,col,.7);line(g,b,B2,col,.7);line(g,A,B2,col,1);g.fillStyle=col;
+ [[A,1],[B2,-1]].forEach(([p,s])=>{g.beginPath();g.moveTo(p[0],p[1]);g.lineTo(p[0]+s*dx/l*8+nx*3,p[1]+s*dy/l*8+ny*3);g.lineTo(p[0]+s*dx/l*8-nx*3,p[1]+s*dy/l*8-ny*3);g.closePath();g.fill()});
+ g.save();g.translate((A[0]+B2[0])/2+nx*Math.sign(off)*10,(A[1]+B2[1])/2+ny*Math.sign(off)*10);let an=Math.atan2(dy,dx);if(an>Math.PI/2||an<-Math.PI/2)an+=Math.PI;g.rotate(an);g.font='12px system-ui,sans-serif';g.textAlign='center';g.textBaseline='middle';g.fillText(txt,0,0);g.restore()}
+
+/* ---------- 2D ---------- */
+function draw2D(){
+ const[W,H,g]=fit($('c2'),.85),c=pal(),Z=S.Z2,a=S.a,ns=S.step+1;
+ // positions of the stages side by side
+ const St=[0,1,2].map(t=>ptsAt(t));let sh=[0];for(let k=1;k<3;k++){const pm=Math.max(...St[k-1].map(p=>p[0]+sh[k-1])),mn=Math.min(...St[k].map(p=>p[0]));sh.push(pm+a*.9-mn)}
+ const Ps=St.map((P,k)=>P.map(p=>[p[0]+sh[k],p[1],p[2]]));
+ const bb=Ps.slice(0,ns).flatMap(P=>P.flatMap(p=>[[p[0],-p[2]],[p[0],p[1]]]));bb.push([Math.min(...bb.map(p=>p[0]))-a*.6,0]);
+ const bx0=Math.min(...bb.map(p=>p[0])),bx1=Math.max(...bb.map(p=>p[0]))+a*.5,by0=Math.min(...bb.map(p=>p[1]))-a*.15,by1=Math.max(...bb.map(p=>p[1]))+a*(ns>=3?.75:.2);
+ const pad=30+S.fs,k=Math.min((W-2*pad)/(bx1-bx0),(H-2*pad)/(by1-by0)),ox=(W-k*(bx1-bx0))/2,oy=(H-k*(by1-by0))/2;
+ const S2=([x,y])=>[(ox+k*(x-bx0))*Z.k+Z.ox,(oy+k*(y-by0))*Z.k+Z.oy],fv=P=>S2([P[0],-P[2]]),tv=P=>S2([P[0],P[1]]);
+ const yx=S2([0,0])[1],xl=S2([bx0,0])[0],xr=S2([bx1,0])[0];line(g,[xl,yx],[xr,yx],c.fg,1.3);
+ g.fillStyle=c.fg;g.font='bold 14px system-ui,sans-serif';g.textAlign='left';g.fillText('X',xl,yx-6);g.textAlign='right';g.fillText('Y',xr,yx-6);
+ for(let s=0;s<ns;s++){const P=Ps[s],N=faceNormals(P),cur=s===S.step;
+  // projectors
+  if(S.proj){P.forEach(p=>line(g,fv(p),tv(p),c.mut,.45,[2,3]));
+   if(s>0){const Q=Ps[s-1];P.forEach((p,i)=>{if(s===1)line(g,tv(Q[i]),tv(p),c.mut,.45,[2,4]);else line(g,fv(Q[i]),fv(p),c.mut,.45,[2,4])})}}
+  edgesView(g,P,N,1,fv,c.acc,cur?2:1.5);edgesView(g,P,N,2,tv,c.grn,cur?2:1.5);
+  if(S.diag){line(g,fv(P[4]),fv(P[2]),c.sec,1.1,[10,3,2,3]);line(g,tv(P[4]),tv(P[2]),c.sec,1.1,[10,3,2,3])}
+  const cP=cen(P);
+  labelsView(g,P,N,1,fv,c.acc,i=>s===2?LT[i].toUpperCase():LT[i]+'′',[cP[0],cP[1],cP[2]]);
+  labelsView(g,P,N,2,tv,c.grn,i=>LT[i],cP);
+  // o / o'
+  g.fillStyle=c.fg;g.font=(S.fs-1)+'px system-ui,sans-serif';g.textAlign='left';if(s<2){const o=fv(cP);g.beginPath();g.arc(o[0],o[1],2,0,7);g.fill();g.fillText('o′',o[0]+5,o[1]-4)}
+  const ot=tv(cP);g.beginPath();g.arc(ot[0],ot[1],2,0,7);g.fill();if(s!==1)g.fillText(s===2?'':'o',ot[0]+5,ot[1]-4);
+  // stage captions
+  const cx=S2([cen(P)[0],0])[0],top=Math.min(...P.map(p=>fv(p)[1])),bot=Math.max(...P.map(p=>tv(p)[1]));
+  g.fillStyle=cur?c.red:c.mut;g.font='bold 12px system-ui,sans-serif';g.textAlign='center';g.fillText(['STAGE 1','STAGE 2','STAGE 3'][s],cx,bot+S.fs+20);
+  if(s===2){g.fillText('ISOMETRIC PROJECTION',cx,top-S.fs-12)}}
+ // dimensions & angles
+ const P0=Ps[0];g.fillStyle=c.dim;
+ dimLine(g,tv(P0[4]),tv(P0[7]),22,`${a}`,c.dim);
+ if(ns>=2){const P=Ps[1],e=fv(P[4]),cc=fv(P[2]);g.font='bold 13px system-ui,sans-serif';g.textAlign='center';g.fillStyle=c.dim;g.textAlign='left';const g7=fv(P[6]);g.fillText('θ = 35°16′',g7[0]+30,g7[1]-30);
+  const r0=34,ang=Math.atan2(fv(P[7])[1]-fv(P[6])[1],fv(P[7])[0]-fv(P[6])[0]),g6=fv(P[6]);g.strokeStyle=c.dim;g.lineWidth=1;g.beginPath();g.arc(g6[0],g6[1],r0,Math.PI,ang>0?ang:ang+2*Math.PI,false);g.stroke()}
+ if(ns>=1){const P=Ps[0],e=fv(P[4]),cc=fv(P[2]);const r0=34;g.strokeStyle=c.dim;g.lineWidth=1;g.beginPath();g.arc(e[0],e[1],r0,-PHI,0);g.stroke();g.fillStyle=c.dim;g.font='12px system-ui,sans-serif';g.textAlign='left';g.fillText('θ',e[0]+r0+3,e[1]-6)}
+ if(ns>=3){const P=Ps[2],G6=fv(P[6]),Hh=fv(P[7]),Ff=fv(P[5]);g.fillStyle=c.dim;g.font='12px system-ui,sans-serif';g.textAlign='center';
+  const eL=Math.hypot(Hh[0]-G6[0],Hh[1]-G6[1])/k/Z.k;const by=Math.max(...P.map(p=>tv(p)[1]))+S.fs+38;g.fillText(`isometric length = ${a} × 0.816 = ${(a*Math.sqrt(2/3)).toFixed(1)} mm`,G6[0],by);
+  const Hd=sub(Hh,G6),an=Math.atan2(-Hd[1],-Hd[0])*180/Math.PI;g.fillText(`edge GH at ${Math.abs(an).toFixed(0)}° to horizontal`,G6[0],by+16)}
+}
+
+/* ---------- 3D ---------- */
+function draw3D(){
+ const[W,H,g]=fit($('c3'),.85),c=pal(),P=ptsAt(S.t),a=S.a;
+ const all=[0,1,2].flatMap(t=>ptsAt(t));const xa=Math.min(...all.map(p=>p[0]))-a*.4,xb=Math.max(...all.map(p=>p[0]))+a*.4,zt=Math.max(...all.map(p=>p[2]))+a*.3,yf=Math.max(...all.map(p=>p[1]))+a*.3;
+ const box=[[xa,0,0],[xb,0,0],[xa,0,zt],[xb,0,zt],[xa,yf,0],[xb,yf,0]],C0=[(xa+xb)/2,yf/2,zt/2],rr=Math.max(...box.map(p=>Math.hypot(...sub(p,C0))));
+ const cy=Math.cos(S.yaw),sy=Math.sin(S.yaw),cp=Math.cos(S.pit),sp=Math.sin(S.pit),sc=Math.min(W,H)*.48/rr*S.z3;
+ const pr=p=>{const X=p[0]-C0[0],Yv=p[2]-C0[2],Zv=-(p[1]-C0[1]),X1=X*cy+Zv*sy,Z1=-X*sy+Zv*cy,Y2=Yv*cp+Z1*sp,Z2=-Yv*sp+Z1*cp;return[W/2+sc*X1,H/2-sc*Y2,Z2]};
+ const poly=(Q,fill,col,al,lw)=>{g.beginPath();Q.forEach((p,i)=>i?g.lineTo(p[0],p[1]):g.moveTo(p[0],p[1]));g.closePath();if(fill){g.globalAlpha=al;g.fillStyle=fill;g.fill();g.globalAlpha=1}if(col){g.strokeStyle=col;g.lineWidth=lw||1;g.stroke()}};
+ poly([[xa,0,0],[xb,0,0],[xb,0,zt],[xa,0,zt]].map(pr),c.acc,c.acc,.12);poly([[xa,0,0],[xb,0,0],[xb,yf,0],[xa,yf,0]].map(pr),c.grn,c.grn,.12);
+ line(g,pr([xa,0,0]),pr([xb,0,0]),c.fg,1.5);g.font='bold 13px system-ui,sans-serif';g.fillStyle=c.acc;g.textAlign='left';let q=pr([xa,0,zt]);g.fillText('VP',q[0]+4,q[1]+14);g.fillStyle=c.grn;q=pr([xa,yf,0]);g.fillText('HP',q[0]+4,q[1]-6);
+ g.fillStyle=c.fg;q=pr([xa,0,0]);g.textAlign='right';g.fillText('X',q[0]-5,q[1]+4);q=pr([xb,0,0]);g.textAlign='left';g.fillText('Y',q[0]+5,q[1]+4);
+ const N=faceNormals(P);
+ if(S.shad){EDGES.forEach(([i,j])=>{const fs=[0,1,2,3,4,5].filter(k=>FACES[k].includes(i)&&FACES[k].includes(j));const vf=Math.max(...fs.map(k=>N[k][1]))>1e-6,vt=Math.max(...fs.map(k=>N[k][2]))>1e-6;
+   line(g,pr([P[i][0],0,P[i][2]]),pr([P[j][0],0,P[j][2]]),c.acc,vf?1.4:.8,vf?[]:[4,3]);line(g,pr([P[i][0],P[i][1],0]),pr([P[j][0],P[j][1],0]),c.grn,vt?1.4:.8,vt?[]:[4,3])})}
+ const light=nrm([.4,.7,.8]),cols=['#f59e0b','#64748b','#e11d48','#2563eb','#16a34a','#9333ea'];
+ FACES.map((F,k)=>({Q:F.map(i=>pr(P[i])),k})).map(o=>({...o,z:o.Q.reduce((s,q)=>s+q[2],0)/4})).sort((x,y)=>y.z-x.z).forEach(o=>{const l=.55+.45*Math.abs(dot(N[o.k],light)),v=parseInt(cols[o.k].slice(1),16);
+  poly(o.Q,`rgb(${[v>>16,(v>>8)&255,v&255].map(x=>Math.round(x*l)).join(',')})`,c.fg,.72,1.6)});
+ if(S.diag)line(g,pr(P[4]),pr(P[2]),c.sec,1.6,[10,3,2,3]);
+ g.fillStyle=c.fg;g.font='bold 13px system-ui,sans-serif';g.textAlign='center';const cc=pr(cen(P));
+ P.forEach((p,i)=>{const s=pr(p),dx=s[0]-cc[0],dy=s[1]-cc[1],l=Math.hypot(dx,dy)||1;g.fillText(LT[i],s[0]+dx/l*12,s[1]+dy/l*12+4)});
+}
+
+/* ---------- text ---------- */
+function info(){const a=S.a,st=S.step;
+ const s1=`<b>Stage 1.</b> Place the cube on HP on one of its faces with its vertical faces equally inclined (45°) to VP. Top view: a square of side ${a} mm with its sides at 45° to XY (a,e on the left, c,g on the right). Front view: a rectangle; draw the body diagonal e′c′ (dash-dot). It is inclined to HP at θ = tan⁻¹(1/√2) = 35°16′.`;
+ const s2=`<b>Stage 2.</b> Tilt the cube about the corner g (in the front view, rotate the first front view about g′) until the body diagonal e′c′ becomes horizontal, i.e. turn it through θ = 35°16′. The cube now rests on the corner g with the body diagonal parallel to HP and VP. Project the new top view from this front view and the first top view (horizontal projectors).`;
+ const s3=`<b>Stage 3.</b> Turn the cube about a vertical axis through g until the body diagonal is perpendicular to VP: redraw the second top view rotated through 90°, so e is behind and c in front, both over o. Project up, taking heights from the second front view. The new front view is a regular hexagon with C and E at the centre: this is the <b>isometric projection</b> of the cube. Every edge appears ${a} × √(2/3) = ${(a*Math.sqrt(2/3)).toFixed(1)} mm long (isometric scale 0.816) and the edges are at 30° to the horizontal or vertical.`;
+ return`<ol>${[s1,s2,s3].map((t,i)=>`<li class="${i===st?'cur':i<st?'done':''}">${t}</li>`).join('')}</ol>`}
+
+/* ---------- UI ---------- */
+function render(){prep();S.step=Math.max(0,Math.min(2,Math.floor(S.t+1e-6)));
+ document.querySelectorAll('#steps button').forEach(b=>b.classList.toggle('on',+b.dataset.s===S.step));
+ $('t').value=Math.round(S.t*100);$('tv').textContent=S.t<1?`stage 1→2 (${(PHI*S.t*180/Math.PI).toFixed(1)}° tilt)`:S.t<2?`stage 2→3 (${(90*(S.t-1)).toFixed(0)}° turn)`:'stage 3';
+ $('qtext').textContent=`Draw the isometric projection of a cube of ${S.a} mm edge, by placing it on a corner with a body diagonal perpendicular to VP. Show the three stages of projection.`;
+ $('info').innerHTML=info();draw2D();draw3D()}
+let anim=null;
+function goTo(to){if(anim)cancelAnimationFrame(anim);const from=S.t,t0=performance.now(),dur=1400*Math.max(.4,Math.abs(to-from));
+ const go=now=>{const q=Math.min(1,(now-t0)/dur),e=q<.5?2*q*q:1-Math.pow(-2*q+2,2)/2;S.t=from+(to-from)*e;render();if(q<1)anim=requestAnimationFrame(go);else anim=null};anim=requestAnimationFrame(go)}
+document.querySelectorAll('#steps button').forEach(b=>b.onclick=()=>{S.Z2={k:1,ox:0,oy:0};goTo(+b.dataset.s)});
+$('t').oninput=e=>{if(anim){cancelAnimationFrame(anim);anim=null}S.t=e.target.value/100;render()};
+$('play').onclick=()=>{S.t=0;render();goTo(2)};
+$('a').onchange=e=>{const v=+e.target.value;if(!isNaN(v)){S.a=Math.max(15,Math.min(80,v));e.target.value=S.a;render()}};
+$('proj').onchange=e=>{S.proj=e.target.checked;draw2D()};$('diag').onchange=e=>{S.diag=e.target.checked;render()};$('shad').onchange=e=>{S.shad=e.target.checked;draw3D()};
+$('fs').oninput=e=>{S.fs=+e.target.value;draw2D()};
+$('vIso').onclick=()=>{S.yaw=-.55;S.pit=.38;draw3D()};$('vFront').onclick=()=>{S.yaw=0;S.pit=0;draw3D()};$('vTop').onclick=()=>{S.yaw=0;S.pit=Math.PI/2;draw3D()};
+$('z3in').onclick=()=>{S.z3=Math.min(6,S.z3*1.25);draw3D()};$('z3out').onclick=()=>{S.z3=Math.max(.3,S.z3*.8);draw3D()};
+function zoom2(f,mx,my){const z=S.Z2,cv=$('c2');if(mx==null){mx=cv.clientWidth/2;my=cv.clientHeight/2}const k=Math.max(.3,Math.min(12,z.k*f));f=k/z.k;z.ox=mx-(mx-z.ox)*f;z.oy=my-(my-z.oy)*f;z.k=k;draw2D()}
+$('z2in').onclick=()=>zoom2(1.25);$('z2out').onclick=()=>zoom2(.8);$('z2rst').onclick=()=>{S.Z2={k:1,ox:0,oy:0};draw2D()};
+['c2','c3'].forEach(id=>{const cv=$(id),pts=new Map();let pinch=null;
+ cv.addEventListener('wheel',e=>{e.preventDefault();const f=Math.exp(-e.deltaY*.0015);if(id==='c2'){const r=cv.getBoundingClientRect();zoom2(f,e.clientX-r.left,e.clientY-r.top)}else{S.z3=Math.max(.3,Math.min(6,S.z3*f));draw3D()}},{passive:false});
+ cv.addEventListener('dblclick',()=>{if(id==='c2'){S.Z2={k:1,ox:0,oy:0};draw2D()}else{S.z3=1;S.yaw=-.55;S.pit=.38;draw3D()}});
+ cv.addEventListener('pointerdown',e=>{cv.setPointerCapture(e.pointerId);pts.set(e.pointerId,[e.clientX,e.clientY]);pinch=null});
+ cv.addEventListener('pointermove',e=>{if(!pts.has(e.pointerId))return;const prev=pts.get(e.pointerId);pts.set(e.pointerId,[e.clientX,e.clientY]);
+  if(pts.size>=2){const[a,b]=[...pts.values()],d=Math.hypot(a[0]-b[0],a[1]-b[1]);if(pinch){const f=d/pinch;if(id==='c2'){const r=cv.getBoundingClientRect();zoom2(f,(a[0]+b[0])/2-r.left,(a[1]+b[1])/2-r.top)}else{S.z3=Math.max(.3,Math.min(6,S.z3*f));draw3D()}}pinch=d;return}
+  const dx=e.clientX-prev[0],dy=e.clientY-prev[1];if(id==='c2'){S.Z2.ox+=dx;S.Z2.oy+=dy;draw2D()}else{S.yaw+=dx*.01;S.pit=Math.max(-1.57,Math.min(1.57,S.pit+dy*.01));draw3D()}});
+ const up=e=>{pts.delete(e.pointerId);pinch=null};cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up)});
+addEventListener('resize',render);matchMedia('(prefers-color-scheme:dark)').addEventListener('change',render);
+render();
+</script></body></html>

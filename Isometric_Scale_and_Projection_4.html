@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Isometric Scale and Projection</title>
+<style>
+:root{--bg:#fafaf7;--fg:#1c1c1a;--mut:#6b6b66;--card:#fff;--bd:#d9d8d2;--acc:#0b5fff;--red:#c2410c;--grn:#0f766e;--sec:#dc2626;--dim:#7c3aed}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15161a;--fg:#ececea;--mut:#9c9c96;--card:#1f2026;--bd:#383a42;--acc:#6ea0ff;--red:#fb923c;--grn:#5eead4;--sec:#f87171;--dim:#c4b5fd}}
+:root[data-theme="dark"]{--bg:#15161a;--fg:#ececea;--mut:#9c9c96;--card:#1f2026;--bd:#383a42;--acc:#6ea0ff;--red:#fb923c;--grn:#5eead4;--sec:#f87171;--dim:#c4b5fd}
+*{box-sizing:border-box}
+body{margin:0;padding:12px;background:var(--bg);color:var(--fg);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:1400px;margin:0 auto}
+h1{font-size:19px;margin:4px 0 2px}h2{font-size:17px;margin:0 0 4px}.sub{color:var(--mut);font-size:13px;margin:0 0 8px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:12px;margin:10px 0}
+.nav{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.nav .pill{flex:1 1 120px;padding:7px 8px;border:1px solid var(--bd);background:transparent;color:var(--fg);border-radius:8px;font:13px inherit;cursor:pointer;text-align:center}
+.nav .pill.on{background:var(--acc);border-color:var(--acc);color:#fff}
+.vbtn{padding:5px 10px;border:1px solid var(--bd);background:transparent;color:var(--fg);border-radius:7px;font:13px inherit;cursor:pointer}
+.vbtn:active{background:var(--acc);border-color:var(--acc);color:#fff}
+.row{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:center;margin:6px 0;font-size:14px}
+.row label{display:flex;align-items:center;gap:6px}
+input[type=range]{width:140px}
+canvas{display:block;width:100%;touch-action:none}
+.panes{display:grid;grid-template-columns:1.15fr 1fr;gap:10px}.panes>.card{min-width:0;margin:0}@media(max-width:860px){.panes{grid-template-columns:1fr}}
+.slide{display:none}.slide.on{display:block}
+.txt{font-size:14px}.txt li{margin:3px 0}
+.cap{font-size:12.5px;color:var(--mut);margin:6px 0 0}
+table.t{border-collapse:collapse;font-size:13px;margin-top:6px}table.t td,table.t th{border:1px solid var(--bd);padding:3px 9px;text-align:center}
+.big{font-size:22px;font-weight:700;color:var(--acc)}
+.foot{display:flex;justify-content:space-between;align-items:center;gap:8px}
+</style></head><body><main>
+<h1>Isometric scale and isometric projection</h1>
+<p class="sub">Seven slides. Use the buttons, the numbered tabs or the ← → keys. 2D drawings are on the left and 3D models on the right; drag 3D models to rotate them.</p>
+<div class="card nav" id="nav"></div>
+
+<!-- 1 -->
+<section class="slide" data-t="Isometric length (82%)">
+ <div class="card txt"><h2>1 · Why isometric lengths are 82% of true lengths</h2>
+ In an isometric projection the cube is viewed along its body diagonal, so every edge is foreshortened equally. The top face, a true square DPB (sides at 45° to the diagonal DB), appears as the rhombus DAB (sides at 30°). Since DB is common, <b>DA / DP = cos 45° / cos 30° = 0.816</b>: isometric length ≈ 82% of true length.
+ <div class="row"><label>True edge <input type="range" id="s1L" min="20" max="60" value="40"> <b id="s1Lv"></b></label>
+ <label>Turn the top face from true shape to isometric <input type="range" id="s1m" min="0" max="100" value="100"> <b id="s1mv"></b></label></div></div>
+ <div class="panes"><div class="card"><canvas id="c1a"></canvas><p class="cap">Thin purple = true length (45°); thick = isometric length (30°). DA/DP is computed live.</p></div>
+ <div class="card"><div class="row" style="margin-top:0"><button class="vbtn" data-cam="1:iso">Isometric view</button><button class="vbtn" data-cam="1:front">Front</button><button class="vbtn" data-cam="1:top">Top</button></div>
+ <canvas id="c1b"></canvas><div class="cap" id="s1r"></div></div></div>
+</section>
+
+<!-- 2 -->
+<section class="slide" data-t="A cube">
+ <div class="card txt"><h2>2 · A cube: multiview and isometric projection</h2>
+ The multiview projection needs two views (front and top). The isometric projection shows three faces (left, top, right) in one view. Its three axes x, y, z are 120° apart; x and y are drawn at 30° to the horizontal and z vertical, so the front vertical edge meets the base edges at 90° + 30°.
+ <div class="row"><label>Edge <input type="range" id="s2a" min="20" max="60" value="40"> <b id="s2av"></b></label>
+ <label><input type="checkbox" id="s2k" checked> Use isometric scale (0.816)</label></div></div>
+ <div class="panes"><div class="card"><canvas id="c2a"></canvas></div>
+ <div class="card"><div class="row" style="margin-top:0"><button class="vbtn" data-cam="2:iso">Isometric view</button><button class="vbtn" data-cam="2:front">Front</button><button class="vbtn" data-cam="2:top">Top</button></div><canvas id="c2b"></canvas>
+ <p class="cap">Turn the model and press "Isometric view": the picture snaps to the isometric projection on the left.</p></div></div>
+</section>
+
+<!-- 3 -->
+<section class="slide" data-t="A rectangular prism">
+ <div class="card txt"><h2>3 · A rectangular prism</h2>
+ Length is measured along the x axis (30° to the right), width along the y axis (30° to the left) and height along z (vertical). Lines parallel to these axes are <b>isometric lines</b> and are the only lines along which measurements are made.
+ <div class="row"><label>Length x <input type="range" id="s3L" min="20" max="90" value="60"> <b id="s3Lv"></b></label><label>Width y <input type="range" id="s3W" min="20" max="70" value="40"> <b id="s3Wv"></b></label><label>Height z <input type="range" id="s3H" min="15" max="70" value="40"> <b id="s3Hv"></b></label>
+ <label><input type="checkbox" id="s3k" checked> Use isometric scale (0.816)</label></div></div>
+ <div class="panes"><div class="card"><canvas id="c3a"></canvas></div>
+ <div class="card"><div class="row" style="margin-top:0"><button class="vbtn" data-cam="3:iso">Isometric view</button><button class="vbtn" data-cam="3:front">Front</button><button class="vbtn" data-cam="3:top">Top</button></div><canvas id="c3b"></canvas></div></div>
+</section>
+
+<!-- 4 -->
+<section class="slide" data-t="Constructing the isometric scale">
+ <div class="card txt"><h2>4 · Construction of the isometric scale</h2>
+ <ol><li>From D draw a line at 45° to the horizontal and mark true lengths 0, 1, 2, 3 … on it (the true-length scale).</li>
+ <li>From D draw a line at 30° to the horizontal (the isometric scale).</li>
+ <li>From each true-length division drop a vertical line to meet the 30° line. The divisions obtained are isometric lengths: each is cos 45°/cos 30° = 0.816 of the true division.</li></ol>
+ <div class="row"><label>Divisions <input type="range" id="s4n" min="3" max="10" value="4"> <b id="s4nv"></b></label><label>Division (true) <input type="range" id="s4u" min="10" max="25" value="20"> <b id="s4uv"></b></label>
+ <label>Build <input type="range" id="s4b" min="0" max="3" value="3"> <b id="s4bv"></b></label><button class="vbtn" id="s4p">▶ Animate</button></div></div>
+ <div class="panes"><div class="card"><canvas id="c4a"></canvas><p class="cap">Isometric scale: every true length on the 45° line drops to 0.816 of itself on the 30° line.</p></div><div class="card"><canvas id="c4b"></canvas><p class="cap">The same 45° (true) and 30° (isometric) lines appear on the top face of a cube: DP is true, DA is isometric.</p></div></div>
+</section>
+
+<!-- 5 -->
+<section class="slide" data-t="Simplified isometric scale">
+ <div class="card txt"><h2>5 · Simplified isometric scale</h2>
+ <ol><li>Draw a horizontal line AB and mark the true lengths 0, 1, 2, 3, 4 on it.</li>
+ <li>From A draw a line at 15° to AB.</li>
+ <li>From each division draw a line at 45° to AB (leaning back towards A) to meet the 15° line. Since the angles of the triangle are 15°, 45° and 120°, each length on the 15° line is sin 45°/sin 120° = 0.816 of the true length.</li></ol>
+ <div class="row"><label>Divisions <input type="range" id="s5n" min="3" max="10" value="4"> <b id="s5nv"></b></label><label>Division (true) <input type="range" id="s5u" min="10" max="25" value="20"> <b id="s5uv"></b></label>
+ <label>Build <input type="range" id="s5b" min="0" max="3" value="3"> <b id="s5bv"></b></label><button class="vbtn" id="s5p">▶ Animate</button></div></div>
+ <div class="card"><canvas id="c5a"></canvas><p class="cap">Each isometric length on the 15° line = 0.816 × the true length (sine rule: sin 45° / sin 120°).</p></div>
+</section>
+
+<!-- 6 -->
+<section class="slide" data-t="Box method">
+ <div class="card txt"><h2>6 · Isometric projection by the box method</h2>
+ <ol id="s6s"><li>Enclose the object (multiview a) in a transparent box of its overall length, width and height, and draw the box in isometric (b).</li>
+ <li>Locate points on the box edges with measurements taken from the views: Q at height z on the left edge, P at distance x from the right end of the top edge.</li>
+ <li>Join the points, darken the outline of the object and leave the box as thin construction lines (c).</li></ol>
+ <div class="row"><label>Stage <input type="range" id="s6b" min="1" max="3" value="3"> <b id="s6bv"></b></label>
+ <label>z (height of Q) <input type="range" id="s6z" min="5" max="35" value="14"> <b id="s6zv"></b></label><label>x (flat top) <input type="range" id="s6x" min="8" max="60" value="22"> <b id="s6xv"></b></label>
+ <label><input type="checkbox" id="s6k" checked> Use isometric scale (0.816)</label></div></div>
+ <div class="panes"><div class="card"><canvas id="c6a"></canvas></div>
+ <div class="card"><div class="row" style="margin-top:0"><button class="vbtn" data-cam="6:iso">Isometric view</button><button class="vbtn" data-cam="6:front">Front</button><button class="vbtn" data-cam="6:top">Top</button><label style="font-size:13px">Box opacity <input type="range" id="s6op" min="0" max="60" value="15"></label></div><canvas id="c6b"></canvas></div></div>
+</section>
+
+<!-- 7 -->
+<section class="slide" data-t="Coordinate method">
+ <div class="card txt"><h2>7 · Isometric projection by the coordinate method</h2>
+ <ol><li>Take the origin at the front-left corner a of the top view and draw the base as an isometric rectangle ABC (b): AB along x at 30°, AC along y at 30°.</li>
+ <li>Locate each point by its coordinates: measure x along AB to fix the foot of P, then measure the height z vertically (a coordinate line) to get P; Q is found the same way from its height above A.</li>
+ <li>Draw the parallel edges through the points along the y axis, join them and darken the outline (c).</li></ol>
+ <div class="row"><label>Stage <input type="range" id="s7b" min="1" max="3" value="3"> <b id="s7bv"></b></label>
+ <label>x (a to p) <input type="range" id="s7x" min="15" max="70" value="58"> <b id="s7xv"></b></label><label>z (height of Q) <input type="range" id="s7z" min="5" max="35" value="14"> <b id="s7zv"></b></label>
+ <label><input type="checkbox" id="s7k" checked> Use isometric scale (0.816)</label></div></div>
+ <div class="panes"><div class="card"><canvas id="c7a"></canvas></div>
+ <div class="card"><div class="row" style="margin-top:0"><button class="vbtn" data-cam="7:iso">Isometric view</button><button class="vbtn" data-cam="7:front">Front</button><button class="vbtn" data-cam="7:top">Top</button><label style="font-size:13px">Box opacity <input type="range" id="s7op" min="0" max="60" value="15"></label></div><canvas id="c7b"></canvas></div></div>
+</section>
+
+<!-- 8 -->
+<section class="slide" data-t="Isometric projection vs view">
+ <div class="card txt"><h2>8 · Isometric projection versus isometric view (drawing) of a cube</h2>
+ Both pictures have the same shape: a regular hexagon with the axes at 30°. The <b>isometric projection</b> is the true orthographic projection, so every edge along the axes is drawn with the isometric scale, 0.816 × true length. The <b>isometric view</b> (isometric drawing) ignores the foreshortening and uses true lengths, so it is 1/0.816 = <b>1.225 times (22.5%) larger</b> than the projection. Being quicker to draw, the isometric view is used in practice; the projection is the "correct" size.
+ <div class="row"><label>Edge of cube <input type="range" id="s8a" min="20" max="60" value="40"> <b id="s8av"></b></label>
+ <label><input type="radio" name="s8m" value="side" checked> Side by side</label><label><input type="radio" name="s8m" value="over"> Overlay (common corner)</label></div></div>
+ <div class="panes"><div class="card"><canvas id="c8a"></canvas><p class="cap">Thick black = isometric projection (isometric scale). Blue = isometric view (true scale). Every dimension along an isometric line is marked.</p></div>
+ <div class="card"><div class="row" style="margin-top:0"><button class="vbtn" data-cam="8:iso">Isometric view</button><button class="vbtn" data-cam="8:front">Front</button><button class="vbtn" data-cam="8:top">Top</button></div>
+ <canvas id="c8b"></canvas><div id="s8t"></div></div></div>
+</section>
+
+<div class="card foot"><button class="vbtn" id="prev">◀ Previous</button><span id="pg" style="color:var(--mut);font-size:13px"></span><button class="vbtn" id="next">Next ▶</button></div>
+</main>
+<script>
+const nrm2=v=>{const l=Math.hypot(v[0],v[1])||1;return[v[0]/l,v[1]/l]},$=id=>document.getElementById(id),R=Math.PI/180,C30=Math.cos(30*R),ISO=Math.sqrt(2/3);
+const sub=(a,b)=>a.map((v,i)=>v-b[i]),add=(a,b)=>a.map((v,i)=>v+b[i]),mul=(a,k)=>a.map(v=>v*k),dot=(a,b)=>a.reduce((s,v,i)=>s+v*b[i],0),
+ cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],nrm=a=>{const l=Math.hypot(...a)||1;return a.map(v=>v/l)},cen=P=>mul(P.reduce((s,p)=>add(s,p),P[0].map(()=>0)),1/P.length);
+function pal(){const s=getComputedStyle(document.documentElement),v=n=>s.getPropertyValue(n).trim();return{fg:v('--fg'),mut:v('--mut'),acc:v('--acc'),grn:v('--grn'),sec:v('--sec'),dim:v('--dim'),red:v('--red'),bg:v('--card')}}
+function fitC(cv,r){const w=Math.max(260,cv.parentElement.clientWidth-24),h=Math.round(w*r),d=window.devicePixelRatio||1;cv.width=w*d;cv.height=h*d;cv.style.width=w+'px';cv.style.height=h+'px';const g=cv.getContext('2d');g.setTransform(d,0,0,d,0,0);return[w,h,g]}
+function line(g,a,b,col,w,dash){g.setLineDash(dash||[]);g.strokeStyle=col;g.lineWidth=w;g.beginPath();g.moveTo(a[0],a[1]);g.lineTo(b[0],b[1]);g.stroke();g.setLineDash([])}
+function arrowHead(g,p,dir,col,sz=8){const l=Math.hypot(...dir)||1,ux=dir[0]/l,uy=dir[1]/l;g.fillStyle=col;g.beginPath();g.moveTo(p[0],p[1]);g.lineTo(p[0]-ux*sz-uy*sz*.4,p[1]-uy*sz+ux*sz*.4);g.lineTo(p[0]-ux*sz+uy*sz*.4,p[1]-uy*sz-ux*sz*.4);g.closePath();g.fill()}
+
+/* ---------- generic 2D renderer (world units, y down) ---------- */
+const Z2={};
+function view2D(id,ratio,items){const cv=$(id),[W,H,g]=fitC(cv,ratio),c=pal(),Z=Z2[id]=Z2[id]||{k:1,ox:0,oy:0};
+ const pts=[];items.forEach(it=>{if(it.a)pts.push(it.a,it.b);if(it.pts)pts.push(...it.pts);if(it.p&&!it.noFit)pts.push(it.p);if(it.c&&it.rw)pts.push([it.c[0]-it.rw,it.c[1]-it.rw],[it.c[0]+it.rw,it.c[1]+it.rw]);if(it.c&&it.R)pts.push([it.c[0]-it.R,it.c[1]-it.R],[it.c[0]+it.R,it.c[1]+it.R])});
+ const x0=Math.min(...pts.map(p=>p[0])),x1=Math.max(...pts.map(p=>p[0])),y0=Math.min(...pts.map(p=>p[1])),y1=Math.max(...pts.map(p=>p[1])),pad=56;
+ const k=Math.min((W-2*pad)/(x1-x0||1),(H-2*pad)/(y1-y0||1)),ox=(W-k*(x1-x0))/2,oy=(H-k*(y1-y0))/2,M=([x,y])=>[(ox+k*(x-x0))*Z.k+Z.ox,(oy+k*(y-y0))*Z.k+Z.oy];
+ const col=n=>c[n]||n;
+ items.forEach(it=>{const C=col(it.col||'fg');
+  if(it.t==='poly'){const P=it.pts.map(M);g.beginPath();P.forEach((p,i)=>i?g.lineTo(p[0],p[1]):g.moveTo(p[0],p[1]));if(it.close!==false)g.closePath();if(it.fill){g.fillStyle=it.fill;g.fill()}if(it.w){g.setLineDash(it.dash||[]);g.strokeStyle=C;g.lineWidth=it.w;g.stroke();g.setLineDash([])}}
+  else if(it.t==='l'){line(g,M(it.a),M(it.b),C,it.w||1,it.dash);if(it.arrow)arrowHead(g,M(it.b),sub(M(it.b),M(it.a)),C)}
+  else if(it.t==='txt'){const p=M(it.p);g.fillStyle=C;g.font=it.font||'13px system-ui,sans-serif';g.textAlign=it.al||'center';g.textBaseline='middle';g.fillText(it.s,p[0]+(it.dx||0),p[1]+(it.dy||0))}
+  else if(it.t==='arc'){const p=M(it.c),r=it.rw*k*Z.k;g.strokeStyle=C;g.lineWidth=1;g.beginPath();g.arc(p[0],p[1],r,it.a0,it.a1);g.stroke();
+   const sz=Math.min(8,r*.25);arrowHead(g,[p[0]+r*Math.cos(it.a0),p[1]+r*Math.sin(it.a0)],[Math.sin(it.a0),-Math.cos(it.a0)],C,sz);arrowHead(g,[p[0]+r*Math.cos(it.a1),p[1]+r*Math.sin(it.a1)],[-Math.sin(it.a1),Math.cos(it.a1)],C,sz);
+   if(it.s){const am=it.la!=null?it.la:(it.a0+it.a1)/2;g.fillStyle=C;g.font='12px system-ui,sans-serif';g.textAlign='center';g.textBaseline='middle';g.fillText(it.s,p[0]+(r+14)*Math.cos(am),p[1]+(r+14)*Math.sin(am))}}
+  else if(it.t==='circ'){const p=M(it.c);g.strokeStyle=C;g.lineWidth=it.w||1;g.beginPath();g.arc(p[0],p[1],it.r,0,7);g.stroke()}
+  else if(it.t==='idim'){const a=M(it.a),b=M(it.b),e=nrm2(it.e),o=it.off,gp=3,A=[a[0]+e[0]*o,a[1]+e[1]*o],B=[b[0]+e[0]*o,b[1]+e[1]*o],dx=B[0]-A[0],dy=B[1]-A[1];
+   line(g,[a[0]+e[0]*gp,a[1]+e[1]*gp],[A[0]+e[0]*4,A[1]+e[1]*4],C,.6);line(g,[b[0]+e[0]*gp,b[1]+e[1]*gp],[B[0]+e[0]*4,B[1]+e[1]*4],C,.6);line(g,A,B,C,.9);arrowHead(g,A,[-dx,-dy],C,8);arrowHead(g,B,[dx,dy],C,8);
+   let an=Math.atan2(dy,dx);if(an>Math.PI/2+1e-6||an<-Math.PI/2+1e-6)an+=Math.PI;const nx=-Math.sin(an),ny=Math.cos(an),sd=(nx*e[0]+ny*e[1])>=0?1:-1;
+   g.save();g.translate((A[0]+B[0])/2+nx*sd*8,(A[1]+B[1])/2+ny*sd*8);g.rotate(an);g.fillStyle=C;g.font='12.5px system-ui,sans-serif';g.textAlign='center';g.textBaseline='middle';g.fillText(it.s,0,0);g.restore()}
+  else if(it.t==='dim'){const a=M(it.a),b=M(it.b),dx=b[0]-a[0],dy=b[1]-a[1],l=Math.hypot(dx,dy)||1,nx=-dy/l,ny=dx/l,o=it.off,A=[a[0]+nx*o,a[1]+ny*o],B=[b[0]+nx*o,b[1]+ny*o];
+   line(g,a,[A[0]+nx*4*Math.sign(o),A[1]+ny*4*Math.sign(o)],C,.6);line(g,b,[B[0]+nx*4*Math.sign(o),B[1]+ny*4*Math.sign(o)],C,.6);line(g,A,B,C,1);arrowHead(g,A,[-dx,-dy],C,7);arrowHead(g,B,[dx,dy],C,7);
+   g.save();g.translate((A[0]+B[0])/2+nx*Math.sign(o)*10,(A[1]+B[1])/2+ny*Math.sign(o)*10);let an=Math.atan2(dy,dx);if(an>Math.PI/2||an<-Math.PI/2)an+=Math.PI;g.rotate(an);g.fillStyle=C;g.font='12px system-ui,sans-serif';g.textAlign='center';g.textBaseline='middle';g.fillText(it.s,0,0);g.restore()}});
+ return{M,k}}
+// pan / zoom for 2D canvases
+function hook2D(id,draw){const cv=$(id),pts=new Map();let pinch=null;const z=()=>Z2[id]=Z2[id]||{k:1,ox:0,oy:0};
+ const zoom=(f,mx,my)=>{const Z=z(),k=Math.max(.4,Math.min(10,Z.k*f));f=k/Z.k;Z.ox=mx-(mx-Z.ox)*f;Z.oy=my-(my-Z.oy)*f;Z.k=k;draw()};
+ cv.addEventListener('wheel',e=>{e.preventDefault();const r=cv.getBoundingClientRect();zoom(Math.exp(-e.deltaY*.0015),e.clientX-r.left,e.clientY-r.top)},{passive:false});
+ cv.addEventListener('dblclick',()=>{Z2[id]={k:1,ox:0,oy:0};draw()});
+ cv.addEventListener('pointerdown',e=>{cv.setPointerCapture(e.pointerId);pts.set(e.pointerId,[e.clientX,e.clientY]);pinch=null});
+ cv.addEventListener('pointermove',e=>{if(!pts.has(e.pointerId))return;const pv=pts.get(e.pointerId);pts.set(e.pointerId,[e.clientX,e.clientY]);
+  if(pts.size>=2){const[a,b]=[...pts.values()],d=Math.hypot(a[0]-b[0],a[1]-b[1]),r=cv.getBoundingClientRect();if(pinch)zoom(d/pinch,(a[0]+b[0])/2-r.left,(a[1]+b[1])/2-r.top);pinch=d;return}
+  const Z=z();Z.ox+=e.clientX-pv[0];Z.oy+=e.clientY-pv[1];draw()});
+ const up=e=>{pts.delete(e.pointerId);pinch=null};cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up)}
+
+/* ---------- generic 3D renderer ---------- */
+const ISOCAM={az:225*R,el:Math.atan(1/Math.SQRT2)},CAMS={iso:ISOCAM,front:{az:270*R,el:0},top:{az:270*R,el:89.9*R}};
+const cam={};[1,2,3,6,7,8].forEach(i=>cam[i]={az:205*R,el:28*R,z:1});
+function camVec(C){const ca=Math.cos(C.az),sa=Math.sin(C.az),ce=Math.cos(C.el),se=Math.sin(C.el);return{V:[ce*ca,ce*sa,se],Rt:[-sa,ca,0],U:[-se*ca,-se*sa,ce]}}
+function view3D(id,ratio,M,C,opt={}){const cv=$(id),[W,H,g]=fitC(cv,ratio),c=pal(),{V,Rt,U}=camVec(C);
+ let pl=null;if(opt.planes){const vv=[...M.V,...(opt.extra||[])],mx=[0,1,2].map(i=>Math.max(...vv.map(p=>p[i]))),mn=[0,1,2].map(i=>Math.min(...vv.map(p=>p[i]))),m=Math.max(...mx.map((v,i)=>v-mn[i]))*.4;
+  pl={xa:mn[0]-m,xb:mx[0]+m,yv:mx[1]+m,yf:mn[1]-m*1.6,zt:mx[2]+m}}
+ const all=[...M.V,...(opt.extra||[]),...(pl?[[pl.xa,pl.yv,0],[pl.xb,pl.yv,pl.zt],[pl.xa,pl.yf,0],[pl.xb,pl.yf,0]]:[])],c0=mul(add(all.reduce((a,p)=>a.map((v,i)=>Math.min(v,p[i])),[1e9,1e9,1e9]),all.reduce((a,p)=>a.map((v,i)=>Math.max(v,p[i])),[-1e9,-1e9,-1e9])),.5),rr=Math.max(...all.map(p=>Math.hypot(...sub(p,c0)))),sc=Math.min(W,H)*.42/rr*(C.z||1);
+ const pr=p=>{const q=sub(p,c0);return[W/2+sc*dot(q,Rt),H/2-sc*dot(q,U),dot(q,V)]},light=nrm([.3,-.6,.9]),mc=cen(M.V);
+ if(pl){const P4=(Q,f,cl,lab,lp)=>{const S=Q.map(pr);g.beginPath();S.forEach((p,i)=>i?g.lineTo(p[0],p[1]):g.moveTo(p[0],p[1]));g.closePath();g.globalAlpha=.12;g.fillStyle=f;g.fill();g.globalAlpha=.8;g.strokeStyle=cl;g.lineWidth=1;g.stroke();g.globalAlpha=1;const q=pr(lp);g.fillStyle=cl;g.font='bold 13px system-ui,sans-serif';g.textAlign='left';g.fillText(lab,q[0]+4,q[1]+4)};
+  P4([[pl.xa,pl.yv,0],[pl.xb,pl.yv,0],[pl.xb,pl.yv,pl.zt],[pl.xa,pl.yv,pl.zt]],c.acc,c.acc,'VP',[pl.xa,pl.yv,pl.zt*.92]);P4([[pl.xa,pl.yv,0],[pl.xb,pl.yv,0],[pl.xb,pl.yf,0],[pl.xa,pl.yf,0]],c.grn,c.grn,'HP',[pl.xa,pl.yf*.8+pl.yv*.2,0]);
+  const xq=pr([pl.xa,pl.yv,0]),yq=pr([pl.xb,pl.yv,0]);line(g,xq,yq,c.fg,1.5);g.fillStyle=c.fg;g.font='bold 13px system-ui,sans-serif';g.textAlign='right';g.fillText('X',xq[0]-5,xq[1]+4);g.textAlign='left';g.fillText('Y',yq[0]+5,yq[1]+4)}
+ // axes from origin
+ if(opt.axes){const o=opt.axes,L=rr*.35;[[1,0,0,'x'],[0,1,0,'y'],[0,0,1,'z']].forEach(([x,y,z,n])=>{const a=pr(o),b=pr(add(o,[x*L,y*L,z*L]));line(g,a,b,c.mut,1);arrowHead(g,b,sub(b,a),c.mut,7);g.fillStyle=c.mut;g.font='12px system-ui,sans-serif';g.textAlign='center';g.fillText(n,b[0]+(b[0]-a[0])*.12,b[1]+(b[1]-a[1])*.12)})}
+ const mk=(Mm,gh)=>{const cc=cen(Mm.V);return Mm.F.map((f,k)=>{const P=f.map(i=>Mm.V[i]);let n=nrm(cross(sub(P[1],P[0]),sub(P[2],P[0])));if(dot(n,sub(cen(P),cc))<0)n=mul(n,-1);const Q=P.map(pr);return{Q,k,n,gh,cols:Mm.cols,z:Q.reduce((s,q)=>s+q[2],0)/Q.length}})};
+ const F=[...mk(M,0),...(opt.ghost&&opt.ghost.alpha>0?mk(opt.ghost.M,1):[])].sort((a,b)=>a.z-b.z);
+ F.forEach(o=>{g.beginPath();o.Q.forEach((p,i)=>i?g.lineTo(p[0],p[1]):g.moveTo(p[0],p[1]));g.closePath();
+  if(o.gh){g.globalAlpha=opt.ghost.alpha;g.fillStyle='#93c5fd';g.fill();g.globalAlpha=Math.min(1,.35+opt.ghost.alpha);g.strokeStyle=c.mut;g.lineWidth=1;g.setLineDash([5,3]);g.stroke();g.setLineDash([]);g.globalAlpha=1;return}
+  const l=.55+.45*Math.abs(dot(o.n,light)),hx=(o.cols&&o.cols[o.k])||'#f59e0b',v=parseInt(hx.slice(1),16);
+  g.globalAlpha=M.alpha||.85;g.fillStyle=`rgb(${[v>>16,(v>>8)&255,v&255].map(x=>Math.round(x*l)).join(',')})`;g.fill();g.globalAlpha=1;g.strokeStyle=c.fg;g.lineWidth=1.6;g.stroke()});
+ (opt.lines||[]).forEach(L=>line(g,pr(L[0]),pr(L[1]),L[2]?c[L[2]]||L[2]:c.mut,L[3]||1,L[4]));
+ (opt.faceLabels||[]).forEach(([p,s])=>{const q=pr(p);g.fillStyle='#fff';g.font='bold 13px system-ui,sans-serif';g.textAlign='center';g.textBaseline='middle';g.fillText(s,q[0],q[1])});
+ g.textBaseline='alphabetic';(opt.labels||[]).forEach(([p,s,col])=>{const q=pr(p),m=pr(mc),dx=q[0]-m[0],dy=q[1]-m[1],l=Math.hypot(dx,dy)||1;g.fillStyle=col?c[col]||col:c.fg;g.font='bold 13px system-ui,sans-serif';g.textAlign='center';g.fillText(s,q[0]+dx/l*13,q[1]+dy/l*13+4)});
+ return{pr,V,Rt,U}}
+function hook3D(id,i,draw){const cv=$(id);let last=null;
+ cv.addEventListener('pointerdown',e=>{cv.setPointerCapture(e.pointerId);last=[e.clientX,e.clientY]});
+ cv.addEventListener('pointermove',e=>{if(!last)return;const C=cam[i];C.az-=(e.clientX-last[0])*.01;C.el=Math.max(-1.55,Math.min(1.55,C.el+(e.clientY-last[1])*.01));last=[e.clientX,e.clientY];draw()});
+ cv.addEventListener('pointerup',()=>last=null);cv.addEventListener('pointercancel',()=>last=null);
+ cv.addEventListener('wheel',e=>{e.preventDefault();cam[i].z=Math.max(.4,Math.min(4,(cam[i].z||1)*Math.exp(-e.deltaY*.0015)));draw()},{passive:false});
+ cv.addEventListener('dblclick',()=>{cam[i]={az:205*R,el:28*R,z:1};draw()})}
+function camTo(i,key,draw){const T=CAMS[key],C=cam[i],a0=C.az,e0=C.el;let da=((T.az-a0)%(2*Math.PI)+3*Math.PI)%(2*Math.PI)-Math.PI;const t0=performance.now();
+ const go=now=>{const q=Math.min(1,(now-t0)/700),e=q<.5?2*q*q:1-Math.pow(-2*q+2,2)/2;C.az=a0+da*e;C.el=e0+(T.el-e0)*e;draw();if(q<1)requestAnimationFrame(go)};requestAnimationFrame(go)}
+
+/* ---------- models ---------- */
+function boxM(L,W,H){const V=[[0,0,0],[L,0,0],[L,W,0],[0,W,0],[0,0,H],[L,0,H],[L,W,H],[0,W,H]];return{V,F:[[0,1,2,3],[4,5,6,7],[0,1,5,4],[1,2,6,5],[2,3,7,6],[3,0,4,7]],cols:['#64748b','#f59e0b','#2563eb','#16a34a','#16a34a','#e11d48']}}
+function wedgeM(L,W,H,zq,xp){const prof=[[0,0],[L,0],[L,H],[xp,H],[0,zq]],V=[...prof.map(([x,z])=>[x,0,z]),...prof.map(([x,z])=>[x,W,z])];
+ return{V,F:[[0,1,2,3,4],[5,6,7,8,9],[0,1,6,5],[1,2,7,6],[2,3,8,7],[3,4,9,8],[4,0,5,9]],cols:['#2563eb','#2563eb','#64748b','#16a34a','#f59e0b','#f59e0b','#e11d48']}}
+// isometric map for 2D drawings: x to the right at 30°, y to the left at 30°, z up (y down on screen)
+const isoP=(o,k)=>([x,y,z])=>[o[0]+(x-y)*C30*k,o[1]-((x+y)*.5+z)*k];
+function visEdges(M,V){const mc=cen(M.V),nf=M.F.map(f=>{const P=f.map(i=>M.V[i]);let n=nrm(cross(sub(P[1],P[0]),sub(P[2],P[0])));if(dot(n,sub(cen(P),mc))<0)n=mul(n,-1);return n});
+ const E={};M.F.forEach((f,k)=>f.forEach((a,j)=>{const b=f[(j+1)%f.length],key=Math.min(a,b)+'_'+Math.max(a,b);(E[key]=E[key]||{a,b,f:[]}).f.push(k)}));
+ return Object.values(E).map(e=>({...e,vis:e.f.some(k=>dot(nf[k],V)>1e-6)}))}
+const ISOV=nrm([-1,-1,1]);
+
+/* ---------- multiview helper ---------- */
+function multiview(items,o,L,W,Hfun,prof,label){// prof: FV outline points [x,z]; draws FV above XY at o and TV below
+ const gap=12,fx=o[0],fy=o[1],ty=fy+gap+W;items.push({t:'l',a:[fx-38,fy],b:[fx+L+12,fy],w:1.2},{t:'txt',p:[fx-38,fy],s:'x',dx:-6,dy:-8},{t:'txt',p:[fx+L+12,fy],s:'y',dx:6,dy:-8});
+ items.push({t:'poly',pts:prof.map(([x,z])=>[fx+x,fy-z]),w:1.9,col:'acc'});items.push({t:'poly',pts:[[fx,ty],[fx+L,ty],[fx+L,ty-W],[fx,ty-W]],w:1.9,col:'grn'});
+ return{fx,fy,ty}}
+function axisGlyph(items,p,s){items.push({t:'l',a:p,b:[p[0]+s,p[1]],arrow:1,col:'mut'},{t:'l',a:p,b:[p[0],p[1]-s],arrow:1,col:'mut'},{t:'circ',c:p,r:6,col:'mut',R:0},{t:'txt',p:[p[0]+s,p[1]],s:'x',dx:8,col:'mut'},{t:'txt',p:[p[0],p[1]-s],s:'y',dy:-8,col:'mut'},{t:'txt',p,s:'z',dx:-12,dy:8,col:'mut'})}
+function isoAxes(items,p,s){const d=[[C30,-.5,'x'],[-C30,-.5,'y'],[0,-1,'z']];d.forEach(([a,b,n])=>items.push({t:'l',a:p,b:[p[0]+a*s,p[1]+b*s],arrow:1,col:'mut'},{t:'txt',p:[p[0]+a*s,p[1]+b*s],s:n,dx:a*10,dy:b*10-2,col:'mut'}))}
+
+/* ---------- slide 1 ---------- */
+function s1Items(L,m){const be=(45-15*m)*R;
+ const e=L*ISO,hd=L*Math.SQRT2/2,O=[0,0],D=[-hd,0],B=[hd,0],P=[0,-hd],A=[0,-hd*Math.tan(be)],Cc=[0,hd*Math.tan(be)];
+ const ei=e*.5,Ai=[0,-ei],Ci=[0,ei],H=[D[0],e],Fp=[B[0],e],G=[0,ei+e];
+ const it=[{t:'l',a:[-hd-20,G[1]],b:[hd+20,G[1]],col:'mut'},{t:'txt',p:[hd+18,G[1]],s:'Base line',dx:30,dy:-10,col:'mut',font:'12px system-ui'},
+  {t:'poly',pts:[D,Ci,G,H],fill:'rgba(37,99,235,.10)',w:2},{t:'poly',pts:[B,Ci,G,Fp],fill:'rgba(22,163,74,.10)',w:2},
+  {t:'l',a:Ci,b:H,w:1,dash:[5,4],col:'mut'},{t:'l',a:Ci,b:Fp,w:1,dash:[5,4],col:'mut'},
+  {t:'l',a:D,b:P,col:'dim',w:1.2},{t:'l',a:P,b:B,col:'dim',w:1.2},{t:'l',a:D,b:B,col:'mut',w:.8},{t:'l',a:P,b:Ci,col:'mut',w:.8,dash:[5,4]},
+  {t:'poly',pts:[D,A,B,Cc],fill:'rgba(245,158,11,.18)',w:2.4},
+  {t:'arc',c:D,rw:hd*.42,a0:-45*R,a1:0,s:'45°',col:'dim',la:-30*R},{t:'arc',c:D,rw:hd*.62,a0:-(45-15*m)*R,a1:0,s:(45-15*m).toFixed(0)+'°',col:'acc',la:-12*R},
+  {t:'arc',c:G,rw:e*.42,a0:Math.PI,a1:Math.PI+30*R,s:'30°',col:'dim'},{t:'arc',c:G,rw:e*.42,a0:-30*R,a1:0,s:'30°',col:'dim'}];
+ [['P',P,0,-12],['A',A,0,-12],['D',D,-12,0],['B',B,12,0],['O',O,-10,-8],['C',Cc,-10,10],['H',H,-12,0],['F',Fp,12,0],['G',G,0,14]].forEach(([s,p,dx,dy])=>it.push({t:'txt',p,s,dx,dy,font:'bold 14px system-ui'}));
+ if(m>.999)it.push({t:'txt',p:[0,ei],s:'E',dx:10,dy:16,font:'bold 14px system-ui'});
+ it.push({t:'idim',a:D,b:P,e:[-1,-1],off:22,s:`True length ${L}`,col:'dim'},{t:'idim',a:A,b:B,e:[-.5,C30],off:16,s:`Isometric ${(Math.hypot(...sub(B,A))).toFixed(1)}`,col:'acc'});
+ return{it,A,D}}
+function s1(){const L=+$('s1L').value,m=+$('s1m').value/100;$('s1Lv').textContent=L+' mm';$('s1mv').textContent=(45-15*m).toFixed(1)+'°';
+ const{it,A,D}=s1Items(L,m);view2D('c1a',.95,it);
+ const DA=Math.hypot(...sub(A,D));
+ const r=view3D('c1b',.8,boxM(L,L,L),cam[1],{axes:[0,0,0],faceLabels:[],planes:1});const{Rt,U}=camVec(cam[1]),f=v=>Math.hypot(dot(v,Rt),dot(v,U)).toFixed(3);
+ $('s1r').innerHTML=`<b>2D:</b> DP = ${L.toFixed(1)} mm, DA = ${DA.toFixed(1)} mm, DA/DP = <span class="big">${(DA/L).toFixed(3)}</span> ${m>.999?'(= cos45°/cos30° = 0.816)':''}<br><b>3D view:</b> projected length ÷ true length for the x, y, z edges = ${f([1,0,0])}, ${f([0,1,0])}, ${f([0,0,1])} ${Math.abs(cam[1].az-ISOCAM.az)<.01&&Math.abs(cam[1].el-ISOCAM.el)<.01?'— all equal: isometric!':'(press "Isometric view" to make them equal)'}`}
+
+/* ---------- slides 2 & 3 ---------- */
+function prismSlide(n,L,W,H,kIso){const k=kIso?ISO:1,it=[];
+ const mv=multiview(it,[0,0],L,W,null,[[0,0],[L,0],[L,H],[0,H]]);axisGlyph(it,[-22,mv.ty+14],16);
+ it.push({t:'idim',a:[0,-H],b:[L,-H],e:[0,-1],off:16,s:`${L}`,col:'dim'},{t:'idim',a:[L,-H],b:[L,0],e:[1,0],off:18,s:`${H}`,col:'dim'},{t:'idim',a:[L,mv.ty-W],b:[L,mv.ty],e:[1,0],off:18,s:`${W}`,col:'dim'});it.push({t:'txt',p:[L/2,mv.ty+28],s:'Multiview projection',font:'13px system-ui'});
+ const o=[L+45+W*C30*k,mv.ty-6],ip=isoP(o,k),M=boxM(L,W,H),E=visEdges(M,ISOV);
+ E.forEach(e=>{if(e.vis)it.push({t:'l',a:ip(M.V[e.a]),b:ip(M.V[e.b]),w:2.2})});
+ const ext=Math.max(L,W)*k*.45;it.push({t:'l',a:[o[0]-W*C30*k-ext*.5,o[1]],b:[o[0]+L*C30*k+ext*.5,o[1]],col:'mut',w:.8});
+ it.push({t:'arc',c:o,rw:Math.min(L,W)*k*.6,a0:-30*R,a1:0,col:'dim',s:'30°',la:-13*R},{t:'arc',c:o,rw:Math.min(L,W)*k*.6,a0:Math.PI,a1:Math.PI+30*R,col:'dim',s:'30°',la:Math.PI+13*R});
+ it.push({t:'idim',a:ip([0,0,0]),b:ip([L,0,0]),e:[C30,.5],off:22,s:`${L}`,col:'dim'},{t:'idim',a:ip([0,0,0]),b:ip([0,W,0]),e:[-C30,.5],off:22,s:`${W}`,col:'dim'},{t:'idim',a:ip([L,0,0]),b:ip([L,0,H]),e:[C30,-.5],off:20,s:`${H}`,col:'dim'});
+ const fl=(p,s)=>it.push({t:'txt',p:ip(p),s,font:'bold 13px system-ui',col:'mut'});fl([0,W/2,H/2],'Left');fl([L/2,W/2,H],'Top');fl([L/2,0,H/2],'Right');
+ isoAxes(it,[o[0],o[1]+42],22);it.push({t:'txt',p:[o[0],o[1]+58],s:kIso?'Isometric projection (isometric scale)':'Isometric drawing (true scale)',font:'13px system-ui'});
+ 
+ view2D('c'+n+'a',.8,it);
+ view3D('c'+n+'b',.8,M,cam[n],{axes:[0,0,0],planes:1,faceLabels:[[[0,W/2,H/2],'Left'],[[L/2,W/2,H],'Top'],[[L/2,0,H/2],'Right']]})}
+function s2(){const a=+$('s2a').value;$('s2av').textContent=a+' mm';prismSlide(2,a,a,a,$('s2k').checked)}
+function s3(){const L=+$('s3L').value,W=+$('s3W').value,H=+$('s3H').value;$('s3Lv').textContent=L;$('s3Wv').textContent=W;$('s3Hv').textContent=H;prismSlide(3,L,W,H,$('s3k').checked)}
+
+/* ---------- slides 4 & 5 ---------- */
+function s4(){const n=+$('s4n').value,u=+$('s4u').value,b=+$('s4b').value;$('s4nv').textContent=n;$('s4uv').textContent=u+' mm';$('s4bv').textContent=['—','45° line','30° line','verticals'][b];
+ const D=[0,0],T=n*u,dir=a=>[Math.cos(a*R),-Math.sin(a*R)],t45=dir(45),t30=dir(30),it=[{t:'l',a:[-10,0],b:[T*1.05,0],col:'mut',w:.8}];
+ it.push({t:'txt',p:D,s:'D',dx:-12,dy:4,font:'bold 14px system-ui'});
+ if(b>=1){it.push({t:'l',a:D,b:mul(t45,T*1.12),w:1.2,col:'dim'},{t:'arc',c:D,rw:T*.42,a0:-45*R,a1:0,s:'45°',col:'dim',la:-38*R},{t:'txt',p:mul(t45,T*1.12),s:'P',dx:8,dy:-8,font:'bold 13px system-ui'},{t:'txt',p:mul(t45,T*.7),s:'True length',col:'dim',dx:-40,dy:-14,font:'13px system-ui'});
+  for(let i=0;i<=n;i++){const p=mul(t45,i*u);it.push({t:'circ',c:p,r:2.2,col:'dim',R:0},{t:'txt',p,s:String(i),dx:-10,dy:-8,col:'dim'})}}
+ if(b>=2){it.push({t:'l',a:D,b:mul(t30,T*ISO*1.25),w:2.6},{t:'arc',c:D,rw:T*.28,a0:-30*R,a1:0,s:'30°',col:'fg',la:-20*R},{t:'txt',p:mul(t30,T*ISO*1.15),s:'Isometric length',dx:20,dy:22,al:'left',font:'13px system-ui'})}
+ if(b>=3)for(let i=1;i<=n;i++){const p=mul(t45,i*u),q=[p[0],-p[0]*Math.tan(30*R)];it.push({t:'l',a:p,b:q,w:1,col:'acc'},{t:'txt',p:q,s:String(i),dx:6,dy:12,col:'acc'})}
+ view2D('c4a',.85,it);
+ view2D('c4b',.85,s1Items(40,1).it)}
+function s5(){const n=+$('s5n').value,u=+$('s5u').value,b=+$('s5b').value;$('s5nv').textContent=n;$('s5uv').textContent=u+' mm';$('s5bv').textContent=['—','true scale','15° line','45° lines'][b];
+ const T=n*u,dir=a=>[Math.cos(a*R),-Math.sin(a*R)],t15=dir(15),it=[];
+ if(b>=1){it.push({t:'l',a:[0,0],b:[T,0],w:1.8,col:'dim'},{t:'txt',p:[0,0],s:'A',dx:-12,font:'bold 14px system-ui'},{t:'txt',p:[T,0],s:'B',dx:12,font:'bold 14px system-ui'},{t:'txt',p:[T*.75,0],s:'True length',dy:34,col:'dim',font:'13px system-ui'});
+  for(let i=0;i<=n;i++)it.push({t:'circ',c:[i*u,0],r:2.2,col:'dim',R:0},{t:'txt',p:[i*u,0],s:String(i),dy:14,col:'dim'})}
+ if(b>=2){it.push({t:'l',a:[0,0],b:mul(t15,T*ISO*1.08),w:2.6},{t:'arc',c:[0,0],rw:T*.22,a0:-15*R,a1:0,s:'15°',la:-7*R},{t:'txt',p:mul(t15,T*ISO*.55),s:'Isometric length',dy:-18,font:'13px system-ui'})}
+ if(b>=3)for(let i=1;i<=n;i++){const d=i*u*ISO,q=mul(t15,d);it.push({t:'l',a:[i*u,0],b:q,col:'acc',w:1},{t:'txt',p:q,s:String(i),dy:-12,col:'acc'});if(i===n)it.push({t:'arc',c:[i*u,0],rw:u*.7,a0:Math.PI+0*R,a1:Math.PI+45*R,s:'45°',col:'acc',la:Math.PI+22*R},{t:'txt',p:q,s:'C',dx:12,dy:-10,font:'bold 14px system-ui'})}
+ view2D('c5a',.42,it);
+}
+
+/* ---------- slides 6 & 7 ---------- */
+const OB={L:80,W:45,H:40};
+function objSlide(n,st,zq,xp,kIso,method){const{L,W,H}=OB,k=kIso?ISO:1,it=[];
+ const mv=multiview(it,[0,0],L,W,null,[[0,0],[L,0],[L,H],[xp,H],[0,zq]]);
+ it.push({t:'l',a:[xp,mv.ty],b:[xp,mv.ty-W],col:'grn',w:1.9},{t:'txt',p:[0,mv.fy],s:"a′",dx:-12,dy:-8,col:'acc'},{t:'txt',p:[L,mv.fy],s:"b′",dx:12,dy:-8,col:'acc'},{t:'txt',p:[0,-zq],s:"q′",dx:-12,col:'acc'},{t:'txt',p:[xp,-H],s:"p′",dx:0,dy:-10,col:'acc'},
+  {t:'txt',p:[0,mv.ty],s:'a',dx:-10,dy:2,col:'grn'},{t:'txt',p:[L,mv.ty],s:'b',dx:10,col:'grn'},{t:'txt',p:[xp,mv.ty],s:'p',dy:12,col:'grn'});
+ it.push({t:'idim',a:[L,-H],b:[L,0],e:[1,0],off:18,s:`${H}`,col:'dim'},{t:'idim',a:[L,mv.ty-W],b:[L,mv.ty],e:[1,0],off:18,s:`${W}`,col:'dim'});
+ if(method==='box'){it.push({t:'poly',pts:[[0,0],[0,-H],[L,-H],[L,0]],col:'mut',w:.8,dash:[4,3],close:false},{t:'idim',a:[0,-zq],b:[0,0],e:[-1,0],off:18,s:`z = ${zq}`,col:'dim'},{t:'idim',a:[xp,-H],b:[L,-H],e:[0,-1],off:16,s:`x = ${L-xp}`,col:'dim'},{t:'idim',a:[0,-H],b:[xp,-H],e:[0,-1],off:16,s:`${xp}`,col:'dim'})}
+ else{it.push({t:'idim',a:[0,mv.ty],b:[xp,mv.ty],e:[0,1],off:16,s:`x = ${xp}`,col:'dim'},{t:'idim',a:[xp,mv.ty],b:[L,mv.ty],e:[0,1],off:16,s:`${L-xp}`,col:'dim'},{t:'idim',a:[0,-zq],b:[0,0],e:[-1,0],off:18,s:`z = ${zq}`,col:'dim'})}
+ axisGlyph(it,[-10,mv.ty+16],16);it.push({t:'txt',p:[L/2,mv.ty+42],s:'(a) Multiview',font:'13px system-ui'});
+ const o=[L+50+W*C30*k,mv.ty-4],ip=isoP(o,k),M=wedgeM(L,W,H,zq,xp),E=visEdges(M,ISOV),bx=boxM(L,W,H);
+ if(method==='box'){const BE=visEdges(bx,ISOV);BE.forEach(e=>it.push({t:'l',a:ip(bx.V[e.a]),b:ip(bx.V[e.b]),col:'mut',w:st===1?1.4:.8,dash:e.vis||st===1?null:[4,3]}))}
+ else{it.push({t:'poly',pts:[[0,0,0],[L,0,0],[L,W,0],[0,W,0]].map(ip),col:st===1?'fg':'mut',w:st===1?1.6:.8})}
+ if(st>=2){const Pf=[xp,0,H],Pb=[xp,W,H],Qf=[0,0,zq],Qb=[0,W,zq];
+  if(method==='coord'){[[xp,0,0],[xp,W,0]].forEach((f,i)=>it.push({t:'l',a:ip(f),b:ip(i?Pb:Pf),col:'dim',w:1,dash:[4,3]}));it.push({t:'l',a:ip([L,0,0]),b:ip([L,0,H]),col:'dim',w:1,dash:[4,3]},{t:'l',a:ip([0,0,0]),b:ip(Qf),col:'dim',w:1,dash:[4,3]});
+   it.push({t:'idim',a:ip([0,0,0]),b:ip([xp,0,0]),e:[C30,.5],off:22,s:`x = ${xp}`,col:'dim'},{t:'idim',a:ip([0,0,0]),b:ip(Qf),e:[-C30,.5],off:20,s:`z = ${zq}`,col:'dim'})}
+  else it.push({t:'idim',a:ip([0,W,0]),b:ip(Qb),e:[-C30,.5],off:20,s:`z = ${zq}`,col:'dim'},{t:'idim',a:ip(Pb),b:ip([L,W,H]),e:[0,-1],off:16,s:`x = ${L-xp}`,col:'dim'});
+  [[Pf,'P'],[Pb,'P'],[Qf,'Q'],[Qb,'Q']].forEach(([p,s])=>it.push({t:'txt',p:ip(p),s,dx:p[1]?-10:10,dy:-10,font:'bold 13px system-ui',col:'sec'}),{});
+  [[Pf,1],[Pb,1],[Qf,1],[Qb,1]].forEach(([p])=>it.push({t:'circ',c:ip(p),r:2.5,col:'sec',R:0}))}
+ if(st>=3)E.forEach(e=>{if(e.vis)it.push({t:'l',a:ip(M.V[e.a]),b:ip(M.V[e.b]),w:2.4})});
+ [[[0,0,0],'A',0,14],[[L,0,0],'B',12,4],[[0,W,0],'C',-12,4]].forEach(([p,s,dx,dy])=>it.push({t:'txt',p:ip(p),s,dx,dy,font:'bold 13px system-ui'}));
+ if(method==='box'&&st>=1)it.push({t:'txt',p:ip([L,W,0]),s:'D',dx:-4,dy:-12,font:'bold 13px system-ui'});
+ if(st===1)it.push({t:'idim',a:ip([0,0,0]),b:ip([L,0,0]),e:[C30,.5],off:22,s:`${L}`,col:'dim'},{t:'idim',a:ip([0,0,0]),b:ip([0,W,0]),e:[-C30,.5],off:22,s:`${W}`,col:'dim'},...(method==='box'?[{t:'idim',a:ip([L,0,0]),b:ip([L,0,H]),e:[C30,-.5],off:20,s:`${H}`,col:'dim'}]:[]));
+ it.push({t:'l',a:[o[0]-W*C30*k-14,o[1]],b:[o[0]+L*C30*k+14,o[1]],col:'mut',w:.8},{t:'arc',c:o,rw:W*k*.75,a0:-30*R,a1:0,s:'30°',col:'dim',la:-13*R},{t:'arc',c:o,rw:W*k*.75,a0:Math.PI,a1:Math.PI+30*R,s:'30°',col:'dim',la:Math.PI+13*R});
+ isoAxes(it,[o[0],o[1]+48],20);
+ it.push({t:'txt',p:[o[0],o[1]+64],s:st===1?(method==='box'?'(b) Isometric box':'(b) Isometric rectangle'):st===2?'Locate P and Q':'(c) Isometric '+(kIso?'projection':'drawing'),font:'13px system-ui'});
+ view2D('c'+n+'a',.72,it);
+ const lines=[];
+ if(method==='coord')lines.push([[0,0,0],[xp,0,0],'dim',2],[[xp,0,0],[xp,0,H],'dim',2,[4,3]]);
+ view3D('c'+n+'b',.85,M,cam[n],{axes:[0,0,0],planes:1,ghost:{M:bx,alpha:+$('s'+n+'op').value/100},extra:bx.V,lines,labels:[[[xp,0,H],'P','sec'],[[xp,W,H],'P','sec'],[[0,0,zq],'Q','sec'],[[0,W,zq],'Q','sec'],[[0,0,0],'A'],[[L,0,0],'B'],[[0,W,0],'C']]})}
+function s6(){const st=+$('s6b').value,z=+$('s6z').value,x=+$('s6x').value;$('s6bv').textContent=['','box','points','object'][st];$('s6zv').textContent=z;$('s6xv').textContent=x;
+ document.querySelectorAll('#s6s li').forEach((li,i)=>li.style.fontWeight=i+1===st?'600':'400');objSlide(6,st,z,OB.L-x,$('s6k').checked,'box')}
+function s7(){const st=+$('s7b').value,x=+$('s7x').value,z=+$('s7z').value;$('s7bv').textContent=['','rectangle','coordinates','object'][st];$('s7xv').textContent=x;$('s7zv').textContent=z;objSlide(7,st,z,x,$('s7k').checked,'coord')}
+
+
+/* ---------- slide 8 ---------- */
+function s8(){const a=+$('s8a').value,over=document.querySelector('input[name=s8m]:checked').value==='over';$('s8av').textContent=a+' mm';
+ const it=[],M=boxM(a,a,a),E=visEdges(M,ISOV),kP=ISO,kV=1;
+ const oV=[0,0],oP=over?[0,0]:[a*C30*2.6,0];
+ const cube=(o,k,col,w,name,dimTxt,side)=>{const ip=isoP(o,k);
+  E.forEach(e=>{if(e.vis)it.push({t:'l',a:ip(M.V[e.a]),b:ip(M.V[e.b]),col,w})});
+  if(!over){it.push({t:'l',a:[o[0]-a*C30*k-8,o[1]],b:[o[0]+a*C30*k+8,o[1]],col:'mut',w:.8},{t:'arc',c:o,rw:a*k*.3,a0:-30*R,a1:0,s:'30°',col:'dim',la:-13*R},{t:'arc',c:o,rw:a*k*.3,a0:Math.PI,a1:Math.PI+30*R,s:'30°',col:'dim',la:Math.PI+13*R})}
+  const d=dimTxt;
+  if(side>=0)it.push({t:'idim',a:ip([0,0,0]),b:ip([a,0,0]),e:[C30,.5],off:(over?22:30)+side*34,s:d,col});
+  if(side<=0||!over)it.push({t:'idim',a:ip([0,0,0]),b:ip([0,a,0]),e:[-C30,.5],off:over?56:30,s:d,col});
+  it.push({t:'idim',a:ip([a,0,0]),b:ip([a,0,a]),e:[C30,-.5],off:20+(over&&side>0?34:0),s:d,col});
+  it.push({t:'txt',p:[o[0],o[1]+(over?0:a*.95)],s:name,dy:over?(side>0?92:110):34,font:'bold 13px system-ui',col})};
+ cube(oV,kV,'acc',over?1.4:2,'Isometric view (true scale)',`${a}`,over?1:0);
+ cube(oP,kP,'fg',2.4,'Isometric projection (isometric scale)',`${(a*ISO).toFixed(1)}`,over?-1:0);
+ if(over){const ipV=isoP(oV,1),ipP=isoP(oP,ISO);it.push({t:'l',a:ipP([a,a,a]),b:ipV([a,a,a]),col:'mut',w:.8,dash:[3,3]},{t:'l',a:ipP([0,a,a]),b:ipV([0,a,a]),col:'mut',w:.8,dash:[3,3]},{t:'l',a:ipP([a,0,a]),b:ipV([a,0,a]),col:'mut',w:.8,dash:[3,3]});
+  it.push({t:'l',a:[-a*C30-8,0],b:[a*C30+8,0],col:'mut',w:.8},{t:'arc',c:[0,0],rw:a*.35,a0:-30*R,a1:0,s:'30°',col:'dim',la:-13*R},{t:'arc',c:[0,0],rw:a*.35,a0:Math.PI,a1:Math.PI+30*R,s:'30°',col:'dim',la:Math.PI+13*R})}
+ view2D('c8a',.85,it);
+ view3D('c8b',.75,M,cam[8],{axes:[0,0,0],planes:1,faceLabels:[[[0,a/2,a/2],'Left'],[[a/2,a/2,a],'Top'],[[a/2,0,a/2],'Right']]});
+ const{Rt,U}=camVec(cam[8]),pl=v=>Math.hypot(dot(v,Rt),dot(v,U));
+ $('s8t').innerHTML=`<table class="t"><tr><th></th><th>Isometric projection</th><th>Isometric view (drawing)</th></tr>
+ <tr><td>Scale used</td><td>Isometric scale (0.816)</td><td>True scale (1.0)</td></tr>
+ <tr><td>Edge length drawn</td><td>${(a*ISO).toFixed(1)} mm</td><td>${a} mm</td></tr>
+ <tr><td>Height of hexagon (top A to bottom G)</td><td>${(2*a*ISO).toFixed(1)} mm</td><td>${(2*a).toFixed(1)} mm</td></tr>
+ <tr><td>Size</td><td>actual projection</td><td>22.5% larger</td></tr></table>
+ <p class="cap">3D model: projected edge ÷ true edge here = ${pl([1,0,0]).toFixed(3)}, ${pl([0,1,0]).toFixed(3)}, ${pl([0,0,1]).toFixed(3)}. At "Isometric view" all three equal 0.816, which is exactly the isometric projection; drawing it at 1.0 gives the isometric view.</p>`}
+
+/* ---------- navigation ---------- */
+const slides=[...document.querySelectorAll('.slide')],DRAW=[s1,s2,s3,s4,s5,s6,s7,s8];let cur=0;
+$('nav').innerHTML=slides.map((s,i)=>`<button class="pill" data-i="${i}">${i+1}. ${s.dataset.t}</button>`).join('');
+function show(i){cur=(i+slides.length)%slides.length;slides.forEach((s,j)=>s.classList.toggle('on',j===cur));document.querySelectorAll('.pill').forEach((b,j)=>b.classList.toggle('on',j===cur));$('pg').textContent=`Slide ${cur+1} of ${slides.length}`;DRAW[cur]()}
+document.querySelectorAll('.pill').forEach(b=>b.onclick=()=>show(+b.dataset.i));$('prev').onclick=()=>show(cur-1);$('next').onclick=()=>show(cur+1);
+addEventListener('keydown',e=>{if(e.target.tagName==='INPUT'&&e.target.type!=='checkbox'&&e.target.type!=='range')return;if(e.key==='ArrowRight')show(cur+1);if(e.key==='ArrowLeft')show(cur-1)});
+document.querySelectorAll('.slide input').forEach(inp=>inp.addEventListener('input',()=>DRAW[cur]()));
+document.querySelectorAll('[data-cam]').forEach(b=>b.onclick=()=>{const[i,k]=b.dataset.cam.split(':');camTo(+i,k,DRAW[cur])});
+[['c1a',0],['c2a',1],['c3a',2],['c4a',3],['c4b',3],['c5a',4],['c6a',5],['c7a',6],['c8a',7]].forEach(([id,i])=>hook2D(id,()=>DRAW[i]()));
+[['c1b',1,0],['c2b',2,1],['c3b',3,2],['c6b',6,5],['c7b',7,6],['c8b',8,7]].forEach(([id,n,i])=>hook3D(id,n,()=>DRAW[i]()));
+const anim=(id,bid)=>{$(bid).onclick=()=>{const el=$(id);let v=0;el.value=0;DRAW[cur]();const t=setInterval(()=>{v++;el.value=v;DRAW[cur]();if(v>=3)clearInterval(t)},800)}};anim('s4b','s4p');anim('s5b','s5p');
+cam[1]={...ISOCAM,z:1};
+addEventListener('resize',()=>DRAW[cur]());matchMedia('(prefers-color-scheme:dark)').addEventListener('change',()=>DRAW[cur]());
+show(0);
+</script></body></html>

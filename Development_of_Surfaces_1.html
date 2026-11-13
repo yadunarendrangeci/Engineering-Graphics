@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Development of Surfaces</title>
+<style>
+:root{--bg:#fafaf7;--fg:#1c1c1a;--mut:#6b6b66;--card:#fff;--bd:#d9d8d2;--acc:#0b5fff;--red:#c2410c;--grn:#0f766e;--dim:#7c3aed}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15161a;--fg:#ececea;--mut:#9c9c96;--card:#1f2026;--bd:#383a42;--acc:#6ea0ff;--red:#fb923c;--grn:#5eead4;--dim:#c4b5fd}}
+:root[data-theme="dark"]{--bg:#15161a;--fg:#ececea;--mut:#9c9c96;--card:#1f2026;--bd:#383a42;--acc:#6ea0ff;--red:#fb923c;--grn:#5eead4;--dim:#c4b5fd}
+*{box-sizing:border-box}
+body{margin:0;padding:12px;background:var(--bg);color:var(--fg);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:1400px;margin:0 auto}
+h1{font-size:19px;margin:4px 0 2px}.sub{color:var(--mut);font-size:13px;margin:0 0 8px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:12px;margin:10px 0}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.tabs button{flex:1 1 110px;padding:8px;border:1px solid var(--bd);background:transparent;color:var(--fg);border-radius:8px;font:inherit;cursor:pointer}
+.tabs button.on{background:var(--acc);border-color:var(--acc);color:#fff}
+.row{display:flex;flex-wrap:wrap;gap:6px 18px;align-items:center;margin:6px 0;font-size:14px}
+.row label{display:flex;align-items:center;gap:6px}
+input[type=range]{width:170px}input[type=number]{width:62px}
+input[type=number]{font:inherit;padding:2px 4px;background:var(--bg);color:var(--fg);border:1px solid var(--bd);border-radius:6px}
+canvas{display:block;width:100%;touch-action:none}
+.panes{display:grid;grid-template-columns:1fr 1fr;gap:10px}.panes .card{min-width:0}@media(max-width:820px){.panes{grid-template-columns:1fr}}
+.vbtn{padding:5px 10px;border:1px solid var(--bd);background:transparent;color:var(--fg);border-radius:7px;font:13px inherit;cursor:pointer}
+.vbtn:active{background:var(--acc);border-color:var(--acc);color:#fff}
+.cap{font-size:12.5px;color:var(--mut);margin:6px 0 0}
+#info{font-size:14px}#info ol{margin:6px 0 0;padding-left:20px}#info li{margin:3px 0}
+#qtext{font-size:14px;padding:8px 10px;border-left:3px solid var(--acc);background:var(--bg);border-radius:4px}
+.hide{display:none!important}
+</style></head><body><main>
+<h1>Development of surfaces</h1>
+<p class="sub">Watch the surface of a solid unfold into its flat pattern (right), next to the 2D development as drawn on paper (left).</p>
+
+<div class="card"><div id="qtext"></div></div>
+
+<div class="card">
+ <div class="tabs" id="types">
+  <button data-t="cube">Cube</button><button data-t="pr4">Square prism</button><button data-t="pr5">Pentagonal prism</button><button data-t="pr6">Hexagonal prism</button>
+  <button data-t="py4">Square pyramid</button><button data-t="py5">Pentagonal pyramid</button><button data-t="py6">Hexagonal pyramid</button><button data-t="cyl">Cylinder</button><button data-t="cone">Cone</button><button data-t="tet">Tetrahedron</button>
+ </div>
+ <div class="row">
+  <label id="lS"><span id="lSt">Base edge</span> <input id="s" type="number" min="10" max="80" value="30"> mm</label>
+  <label id="lD">Diameter <input id="D" type="number" min="10" max="100" value="40"> mm</label>
+  <label id="lH">Height <input id="h" type="number" min="10" max="120" value="60"> mm</label>
+  <label id="lB"><input id="bases" type="checkbox" checked> Include base(s)</label>
+  <label><input id="lbl" type="checkbox" checked> 3D labels</label>
+ </div>
+ <div class="row">
+  <label>Unfold <input id="t" type="range" min="0" max="100" value="0"> <b id="tv">0%</b></label>
+  <button class="vbtn" id="play" type="button">▶ Unfold</button>
+  <label>Face opacity <input id="op" type="range" min="20" max="100" value="85"> <b id="opv">85%</b></label>
+ </div>
+</div>
+
+<div class="card" id="info"></div>
+
+<div class="panes">
+<div class="card">
+ <div class="row" style="margin-top:0"><b style="font-size:14px">2D development</b>
+  <button class="vbtn" id="z2out" type="button">−</button><button class="vbtn" id="z2in" type="button">+</button><button class="vbtn" id="z2rst" type="button">Fit</button></div>
+ <canvas id="c2"></canvas>
+ <p class="cap">Thick lines = outline you cut along; thin lines = fold lines (or generators on a cylinder); purple = dimensions. Scroll or pinch to zoom, drag to pan, double-click to fit.</p>
+</div>
+<div class="card">
+ <div class="row" style="margin-top:0"><b style="font-size:14px">3D unfolding</b>
+  <button class="vbtn" id="vIso" type="button">Isometric</button><button class="vbtn" id="vFront" type="button">Front</button><button class="vbtn" id="vTop" type="button">Top</button><button class="vbtn" id="vNorm" type="button">⟂ Development</button>
+  <button class="vbtn" id="z3out" type="button">−</button><button class="vbtn" id="z3in" type="button">+</button></div>
+ <canvas id="c3"></canvas>
+ <p class="cap">Drag to rotate, scroll or pinch to zoom, double-click to reset. The first lateral face stays fixed and every other face swings about its shared edge until the whole surface lies in one plane. "⟂ Development" looks straight at that plane, so the pattern is seen in its true shape.</p>
+</div>
+</div>
+</main>
+<script>
+const $=id=>document.getElementById(id),LT='abcdefghijklmnop';
+const TY={cube:{k:'pr',n:4,nm:'cube'},pr4:{k:'pr',n:4,nm:'square prism'},pr5:{k:'pr',n:5,nm:'pentagonal prism'},pr6:{k:'pr',n:6,nm:'hexagonal prism'},
+ py4:{k:'py',n:4,nm:'square pyramid'},py5:{k:'py',n:5,nm:'pentagonal pyramid'},py6:{k:'py',n:6,nm:'hexagonal pyramid'},cyl:{k:'cy',n:36,nm:'cylinder'},cone:{k:'cn',n:36,nm:'cone'},tet:{k:'te',n:3,nm:'tetrahedron'}};
+const ROUND=k=>k==='cy'||k==='cn',APEX=k=>k==='py'||k==='cn'||k==='te';
+const S={type:'pr6',s:30,h:60,D:40,bases:true,lbl:true,t:0,op:85,yaw:-.6,pit:.45,z3:1,Z2:{k:1,ox:0,oy:0}};
+const add=(a,b)=>a.map((v,i)=>v+b[i]),sub=(a,b)=>a.map((v,i)=>v-b[i]),mul=(a,k)=>a.map(v=>v*k),dot=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2],
+ cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],nrm=a=>{const l=Math.hypot(...a)||1;return a.map(v=>v/l)};
+function rot(v,a,th){const c=Math.cos(th),s=Math.sin(th);return add(add(mul(v,c),mul(cross(a,v),s)),mul(a,dot(a,v)*(1-c)))}
+const rotP=(p,R,k)=>add(rot(sub(p,R.p),R.a,R.ang*k),R.p);
+let G;
+
+/* ---------- geometry: faces + hinge chain ---------- */
+function build(){
+ const ty=TY[S.type],N=ty.n,kind=ty.k,h=S.type==='cube'?S.s:kind==='te'?S.s*Math.sqrt(2/3):S.h;
+ const r=ROUND(kind)?S.D/2:S.s/(2*Math.sin(Math.PI/N)),s=ROUND(kind)?2*r*Math.sin(Math.PI/N):S.s;
+ const B=[...Array(N)].map((_,j)=>{const a=-Math.PI/2-Math.PI/N+j*2*Math.PI/N;return[r*Math.cos(a),r*Math.sin(a),0]});
+ const T=B.map(p=>[p[0],p[1],h]),O=[0,0,h];
+ const faces=[],hue=j=>kind==='cy'?'#0ea5e9':kind==='cn'?'#f97316':['#e11d48','#2563eb','#16a34a','#f59e0b','#9333ea','#0891b2','#db2777','#65a30d'][j%8];
+ if(kind==='te')faces.push({pts:B.slice().reverse(),col:'#64748b',par:-1,base:1,edges:null});
+ for(let j=0;j<N;j++){const j1=(j+1)%N;
+  faces.push(kind==='te'?{pts:[B[j],B[j1],O],col:hue(j),par:0,hinge:[B[j],B[j1]],lat:j}
+   :APEX(kind)?{pts:[B[j],B[j1],O],col:hue(j),par:j-1,hinge:[B[j],O],lat:j,edges:kind==='cn'?[1,0,0]:null}
+   :{pts:[B[j],B[j1],T[j1],T[j]],col:hue(j),par:j-1,hinge:[B[j],T[j]],lat:j,
+     edges:kind==='cy'?[1,0,1,0]:null})}
+ const att=kind==='pr'?1:kind==='py'?Math.floor(N/2):N/2;
+ if(S.bases&&kind!=='te'){
+  faces.push({pts:B.slice().reverse(),col:'#64748b',par:att,hinge:[B[att],B[(att+1)%N]],base:1,edges:null});
+  if(!APEX(kind))faces.push({pts:T.slice(),col:'#94a3b8',par:att,hinge:[T[att],T[(att+1)%N]],base:1,edges:null});
+ }
+ const cen=[0,0,APEX(kind)?h/4:h/2];
+ faces.forEach(f=>{let n=nrm(cross(sub(f.pts[1],f.pts[0]),sub(f.pts[2],f.pts[0])));const m=f.pts.reduce((a,p)=>add(a,mul(p,1/f.pts.length)),[0,0,0]);if(dot(n,sub(m,cen))<0)n=mul(n,-1);f.n=n});
+ faces.forEach((f,i)=>{if(f.par<0){f.rots=[];return}const P=faces[f.par],a=nrm(sub(f.hinge[1],f.hinge[0])),d=Math.acos(Math.max(-1,Math.min(1,dot(f.n,P.n))));
+  const R1={p:f.hinge[0],a,ang:d},R2={p:f.hinge[0],a,ang:-d};
+  f.R=dot(rot(f.n,a,d),P.n)>=dot(rot(f.n,a,-d),P.n)?R1:R2;f.rots=[f.R,...P.rots]});
+ // labels attached to faces
+ const labs=[];
+ if(ROUND(kind)){for(let g=0;g<=12;g++){const j=g*N/12,fi=Math.min(j,N-1),pi=j===N?1:0;labs.push({f:fi,p:pi,n:String(g%12+1)})}if(kind==='cn')labs.push({f:0,p:2,n:'O'})}
+ else if(kind==='te'){for(let j=0;j<N;j++)labs.push({f:j+1,p:0,n:LT[j].toUpperCase()},{f:j+1,p:2,n:'O'})}
+ else{for(let j=0;j<N;j++){labs.push({f:j,p:0,n:LT[j].toUpperCase()});if(kind==='pr')labs.push({f:j,p:3,n:LT[j].toUpperCase()+'1'})}
+  labs.push({f:N-1,p:1,n:'A'});if(kind==='pr')labs.push({f:N-1,p:2,n:'A1'});else labs.push({f:0,p:2,n:'O'})}
+ const L=Math.hypot(h,r),slant=Math.hypot(h,r*Math.cos(Math.PI/N));
+ G={N,kind,h,r,s,faces,att,labs,L,slant};
+ // fixed scene centre / radius from folded + unfolded states
+ const all=[0,1].flatMap(k=>faces.flatMap(f=>f.pts.map(p=>xf(f,p,k))));
+ const mn=[0,1,2].map(i=>Math.min(...all.map(p=>p[i]))),mx=[0,1,2].map(i=>Math.max(...all.map(p=>p[i])));
+ G.c=mn.map((v,i)=>(v+mx[i])/2);G.rad=Math.max(...all.map(p=>Math.hypot(...sub(p,G.c))));
+}
+function xf(f,p,k){let q=p;f.rots.forEach(R=>{q=rotP(q,R,k)});return q}
+
+/* ---------- drawing helpers ---------- */
+function pal(){const s=getComputedStyle(document.documentElement),v=n=>s.getPropertyValue(n).trim();return{fg:v('--fg'),mut:v('--mut'),acc:v('--acc'),red:v('--red'),grn:v('--grn'),dim:v('--dim'),bg:v('--bg')}}
+function fit(cv,r){const w=Math.max(280,cv.parentElement.clientWidth-24),h=Math.round(w*r),d=window.devicePixelRatio||1;
+ cv.width=w*d;cv.height=h*d;cv.style.width=w+'px';cv.style.height=h+'px';const g=cv.getContext('2d');g.setTransform(d,0,0,d,0,0);return[w,h,g]}
+function line(g,a,b,col,w,dash){g.setLineDash(dash||[]);g.strokeStyle=col;g.lineWidth=w;g.beginPath();g.moveTo(a[0],a[1]);g.lineTo(b[0],b[1]);g.stroke();g.setLineDash([])}
+function shade(hex,k){const n=parseInt(hex.slice(1),16),c=[n>>16,(n>>8)&255,n&255].map(v=>Math.round(v*k+255*(1-k)*.15));return`rgb(${c.join(',')})`}
+
+/* ---------- 3D ---------- */
+function draw3D(){
+ const[W,H,g]=fit($('c3'),.95),c=pal(),k=S.t;
+ const cy=Math.cos(S.yaw),sy=Math.sin(S.yaw),cp=Math.cos(S.pit),sp=Math.sin(S.pit),sc=Math.min(W,H)*.46/G.rad*S.z3;
+ const pr=p=>{const X=p[0]-G.c[0],Yv=p[2]-G.c[2],Zv=p[1]-G.c[1],X1=X*cy+Zv*sy,Z1=-X*sy+Zv*cy,Y2=Yv*cp+Z1*sp,Z2=-Yv*sp+Z1*cp;return[W/2+sc*X1,H/2-sc*Y2,Z2]};
+ const light=nrm([.4,-.7,.8]);
+ const items=G.faces.map((f,i)=>{const P=f.pts.map(p=>xf(f,p,k)),S2=P.map(pr),n=nrm(cross(sub(P[1],P[0]),sub(P[2],P[0])));
+  return{f,i,P,S2,z:S2.reduce((a,q)=>a+q[2],0)/S2.length,lit:.55+.45*Math.abs(dot(n,light))}});
+ items.sort((a,b)=>b.z-a.z).forEach(o=>{const Q=o.S2;g.beginPath();Q.forEach((p,i)=>i?g.lineTo(p[0],p[1]):g.moveTo(p[0],p[1]));g.closePath();
+  const col=shade(o.f.col,o.lit);g.globalAlpha=S.op/100;g.fillStyle=col;g.fill();g.globalAlpha=1;
+  if(ROUND(G.kind)&&!o.f.base){const ap=Q.length-1;g.strokeStyle=col;g.lineWidth=.6;g.stroke();
+   for(let e=0;e<Q.length;e++)if(o.f.edges[e])line(g,Q[e],Q[(e+1)%Q.length],c.fg,1.6);
+   if(o.i%(G.N/12)===0)line(g,Q[0],Q[ap],c.fg,.7,[3,3]);
+   if(o.i===0)line(g,Q[0],Q[ap],c.fg,1.6);if(o.i===G.N-1)line(g,Q[1],Q[2],c.fg,1.6);}
+  else if(ROUND(G.kind)){g.strokeStyle=col;g.lineWidth=.6;g.stroke();g.beginPath();Q.forEach((p,i)=>i?g.lineTo(p[0],p[1]):g.moveTo(p[0],p[1]));g.closePath();g.strokeStyle=c.fg;g.lineWidth=1.6;g.stroke()}
+  else{g.strokeStyle=c.fg;g.lineWidth=1.4;g.stroke()}});
+ if(S.lbl){g.fillStyle=c.fg;g.font='bold 13px system-ui,sans-serif';g.textAlign='center';
+  const fc=pr(G.faces[0].pts.map(p=>xf(G.faces[0],p,k)).reduce((a,p)=>add(a,p),[0,0,0]).map(v=>v/G.faces[0].pts.length));
+  G.labs.forEach(l=>{const f=G.faces[l.f],q=pr(xf(f,f.pts[l.p],k)),fm=pr(f.pts.map(p=>xf(f,p,k)).reduce((a,p)=>add(a,p),[0,0,0]).map(v=>v/f.pts.length));
+   const dx=q[0]-fm[0],dy=q[1]-fm[1],l2=Math.hypot(dx,dy)||1;g.fillText(l.n,q[0]+dx/l2*11,q[1]+dy/l2*11+4)})}
+}
+
+/* ---------- 2D development ---------- */
+function regPoly(P,Q,N,sgn){const pts=[P,Q];let d=[Q[0]-P[0],Q[1]-P[1]],cur=Q;const e=sgn*2*Math.PI/N;
+ for(let i=0;i<N-2;i++){const c=Math.cos(e),s=Math.sin(e);d=[d[0]*c-d[1]*s,d[0]*s+d[1]*c];cur=[cur[0]+d[0],cur[1]+d[1]];pts.push(cur)}return pts}
+function dev2D(){ // returns drawing primitives in mm (y down)
+ const{N,kind,h,s,r,att,L}=G,out={thick:[],thin:[],dash:[],lab:[],dim:[],circ:[],arc:null,polys:[]};
+ if(kind==='pr'||kind==='cy'){
+  const n=kind==='cy'?12:N,w=kind==='cy'?Math.PI*2*r:N*s,step=w/n;
+  out.polys.push([[0,0],[w,0],[w,h],[0,h]]);
+  for(let i=1;i<n;i++)(kind==='cy'?out.dash:out.thin).push([[i*step,0],[i*step,h]]);
+  for(let i=0;i<=n;i++){const nm=kind==='cy'?String(i%n+1):LT[i%N].toUpperCase();out.lab.push({p:[i*step,h],n:nm,o:[0,14]});out.lab.push({p:[i*step,0],n:kind==='cy'?nm:nm+'1',o:[0,-7]})}
+  out.dim.push({a:[0,h],b:[w,h],off:24,offmm:0,t:kind==='cy'?`πD = ${w.toFixed(1)}`:`${N} × ${s} = ${w}`});
+  out.dim.push({a:[0,0],b:[0,h],off:24,t:`${h}`,v:1});
+  if(S.bases){if(kind==='cy'){const cx=(att+.5)*Math.PI*2*r/N;out.circ.push([cx,h+r,r],[cx,-r,r])}
+   else{const x0=att*s;out.polys.push(regPoly([x0,h],[x0+s,h],N,1),regPoly([x0,0],[x0+s,0],N,-1));
+    out.thin.push([[x0,h],[x0+s,h]],[[x0,0],[x0+s,0]])}}
+ }else if(kind==='te'){
+  const a=s,H2=Math.sqrt(3)*a,Lm=[a/2,H2/2],Bm=[a,H2],Cm=[3*a/2,H2/2];
+  out.polys.push([[a,0],[0,H2],[2*a,H2]]);out.thin.push([Lm,Bm],[Bm,Cm],[Cm,Lm]);
+  out.lab.push({p:Lm,n:'A',o:[-12,4]},{p:Bm,n:'B',o:[0,16]},{p:Cm,n:'C',o:[12,4]},{p:[a,0],n:'O',o:[0,-8]},{p:[0,H2],n:'O',o:[-10,14]},{p:[2*a,H2],n:'O',o:[10,14]});
+  out.dim.push({a:[0,H2],b:[a,H2],off:28,t:`a = ${a}`});
+ }else if(kind==='cn'){
+  const th=2*Math.PI*r/L,a0=Math.PI/2-th/2,P=[...Array(13)].map((_,i)=>{const a=Math.PI/2+th/2-i*th/12;return[L*Math.cos(a),L*Math.sin(a)]});
+  out.sector={r:L,a0,a1:Math.PI/2+th/2};out.arc={r:L,a0,a1:a0+th};
+  for(let i=1;i<12;i++)out.dash.push([[0,0],P[i]]);
+  P.forEach((p,i)=>out.lab.push({p,n:String(i%12+1),o:[p[0]/L*13,p[1]/L*13+4]}));out.lab.push({p:[0,0],n:'O',o:[0,-8]});
+  out.dim.push({a:[0,0],b:P[0],off:16,t:`L = ${L.toFixed(1)}`});
+  out.ang={th};
+  if(S.bases)out.circ.push([0,L+r,r]);
+ }else{
+  const al=2*Math.asin(s/(2*L)),th=N*al,P=[...Array(N+1)].map((_,i)=>{const a=Math.PI/2+th/2-i*al;return[L*Math.cos(a),L*Math.sin(a)]});
+  out.arc={r:L,a0:Math.PI/2-th/2,a1:Math.PI/2+th/2};
+  out.polys.push([[0,0],...P]);
+  for(let i=1;i<N;i++)out.thin.push([[0,0],P[i]]);
+  P.forEach((p,i)=>out.lab.push({p,n:LT[i%N].toUpperCase(),o:[p[0]/L*12,p[1]/L*12+4]}));out.lab.push({p:[0,0],n:'O',o:[0,-8]});
+  out.dim.push({a:[0,0],b:P[0],off:16,t:`L = ${L.toFixed(1)}`});
+  out.ang={th};
+  if(S.bases){const A=P[att],Bp=P[att+1],c1=regPoly(A,Bp,N,1),c2=regPoly(A,Bp,N,-1),fr=q=>Math.hypot(...q.reduce((a,p)=>[a[0]+p[0],a[1]+p[1]],[0,0]));
+   out.polys.push(fr(c1)>fr(c2)?c1:c2)}
+ }
+ if(out.ang){const pts=[...out.polys.flat(),...out.circ.flatMap(([x,y,rr])=>[[x,y+rr],[x-rr,y],[x+rr,y]]),[0,L]];out.ang.R=Math.max(L,...pts.map(p=>Math.hypot(p[0],p[1])))}
+ if(S.bases&&(kind==='pr'||kind==='cy')){const ym=Math.max(...out.polys.flat().map(p=>p[1]),...out.circ.map(c=>c[1]+c[2]));out.dim[0].offmm=ym-h}
+ return out;
+}
+function draw2D(){
+ const[W,H,g]=fit($('c2'),.95),c=pal(),D=dev2D(),Z=S.Z2;
+ const pts=[...D.polys.flat(),...(D.dim[0].offmm?[[0,D.dim[0].a[1]+D.dim[0].offmm+12]]:[]),...D.circ.flatMap(([x,y,r])=>[[x-r,y-r],[x+r,y+r]]),...D.dim.flatMap(d=>[d.a,d.b])];
+ if(D.arc)pts.push([-D.arc.r,0],[D.arc.r,D.arc.r]);
+ if(D.ang){const RR=D.ang.R*1.18;[D.arc.a0,(D.arc.a0+D.arc.a1)/2,D.arc.a1].forEach(a=>pts.push([RR*Math.cos(a),RR*Math.sin(a)]))}
+ const x0=Math.min(...pts.map(p=>p[0])),x1=Math.max(...pts.map(p=>p[0])),y0=Math.min(...pts.map(p=>p[1])),y1=Math.max(...pts.map(p=>p[1]));
+ const pad=46,k=Math.min((W-2*pad)/(x1-x0),(H-2*pad)/(y1-y0)),ox=(W-k*(x1-x0))/2,oy=(H-k*(y1-y0))/2;
+ const M=p=>[(ox+k*(p[0]-x0))*Z.k+Z.ox,(oy+k*(p[1]-y0))*Z.k+Z.oy],K=k*Z.k;
+ if(D.sector){const o=M([0,0]);g.beginPath();g.moveTo(o[0],o[1]);g.arc(o[0],o[1],D.sector.r*K,D.sector.a0,D.sector.a1);g.closePath();g.fillStyle='rgba(14,165,233,.10)';g.fill();g.strokeStyle=c.fg;g.lineWidth=2.2;g.stroke()}
+ else if(D.arc){const o=M([0,0]);g.setLineDash([6,4]);g.strokeStyle=c.mut;g.lineWidth=1;g.beginPath();g.arc(o[0],o[1],D.arc.r*K,D.arc.a0-.12,D.arc.a1+.12);g.stroke();g.setLineDash([])}
+ D.polys.forEach((P,i)=>{g.beginPath();P.forEach((p,j)=>{const q=M(p);j?g.lineTo(q[0],q[1]):g.moveTo(q[0],q[1])});g.closePath();
+  g.fillStyle=i===0?'rgba(14,165,233,.10)':'rgba(100,116,139,.13)';g.fill();g.strokeStyle=c.fg;g.lineWidth=2.2;g.stroke()});
+ D.circ.forEach(([x,y,r])=>{const q=M([x,y]);g.beginPath();g.arc(q[0],q[1],r*K,0,7);g.fillStyle='rgba(100,116,139,.13)';g.fill();g.strokeStyle=c.fg;g.lineWidth=2.2;g.stroke()});
+ D.thin.forEach(([a,b])=>line(g,M(a),M(b),c.fg,1));D.dash.forEach(([a,b])=>line(g,M(a),M(b),c.mut,.9,[4,3]));
+ // dimensions
+ g.font='12.5px system-ui,sans-serif';g.fillStyle=c.dim;
+ D.dim.forEach(d=>{const a=M(d.a),b=M(d.b),dx=b[0]-a[0],dy=b[1]-a[1],l=Math.hypot(dx,dy)||1,nx=-dy/l,ny=dx/l,o=d.off+(d.offmm||0)*K;
+  const A=[a[0]+nx*o,a[1]+ny*o],B2=[b[0]+nx*o,b[1]+ny*o];line(g,a,A,c.dim,.7);line(g,b,B2,c.dim,.7);line(g,A,B2,c.dim,1);
+  [[A,1],[B2,-1]].forEach(([p,sg])=>{g.beginPath();g.moveTo(p[0],p[1]);g.lineTo(p[0]+sg*dx/l*8-ny*0+nx*3,p[1]+sg*dy/l*8+ny*3);g.lineTo(p[0]+sg*dx/l*8-nx*3,p[1]+sg*dy/l*8-ny*3);g.closePath();g.fill()});
+  g.save();g.translate((A[0]+B2[0])/2+nx*Math.sign(o)*9,(A[1]+B2[1])/2+ny*Math.sign(o)*9);let an=Math.atan2(dy,dx);if(an>Math.PI/2||an<-Math.PI/2)an+=Math.PI;g.rotate(an);g.textAlign='center';g.textBaseline='middle';g.fillText(d.t,0,0);g.restore()});
+ if(D.ang){const o=M([0,0]),rr=D.ang.R*K+22,a0=D.arc.a0,a1=D.arc.a1,at=(a,r)=>[o[0]+r*Math.cos(a),o[1]+r*Math.sin(a)];
+  g.strokeStyle=c.dim;g.lineWidth=1;g.beginPath();g.arc(o[0],o[1],rr,a0,a1);g.stroke();
+  [a0,a1].forEach(a=>line(g,at(a,D.arc.r*K+4),at(a,rr+6),c.dim,.7));
+  [[a0,1],[a1,-1]].forEach(([a,sg])=>{const p=at(a,rr),tx=-Math.sin(a)*sg,ty=Math.cos(a)*sg,nx=Math.cos(a),ny=Math.sin(a);g.beginPath();g.moveTo(p[0],p[1]);g.lineTo(p[0]+tx*8+nx*3,p[1]+ty*8+ny*3);g.lineTo(p[0]+tx*8-nx*3,p[1]+ty*8-ny*3);g.closePath();g.fill()});
+  g.textAlign='center';g.textBaseline='middle';const tp=at((a0+a1)/2,rr+12);g.fillText(`θ = ${(D.ang.th*180/Math.PI).toFixed(1)}°`,tp[0],tp[1])}
+ g.fillStyle=c.fg;g.font='bold 13px system-ui,sans-serif';g.textAlign='center';g.textBaseline='alphabetic';
+ D.lab.forEach(l=>{const q=M(l.p);g.fillText(l.n,q[0]+l.o[0],q[1]+l.o[1])});
+ g.fillStyle=c.red;g.font='bold 12px system-ui,sans-serif';const tp=M([(x0+x1)/2,y0]);g.fillText('DEVELOPMENT OF '+(G.kind==='te'||S.bases?'COMPLETE':'LATERAL')+' SURFACE',tp[0],Math.max(16,tp[1]-30));
+}
+
+/* ---------- text ---------- */
+function info(){
+ const{N,kind,h,s,r,L,slant}=G,ty=TY[S.type],B=S.bases;
+ if(kind==='pr'){const w=N*s;return`<ol>
+ <li>Draw a rectangle of length = perimeter of the base = ${N} × ${s} = <b>${w} mm</b> and height = <b>${h} mm</b>.</li>
+ <li>Divide the length into ${N} equal parts of ${s} mm and draw the vertical fold lines. Name the bottom corners A, B, C … A and the top corners A1, B1, C1 … A1.</li>
+ ${B?`<li>Attach the ${N===4?'square':N===5?'pentagonal':'hexagonal'} top and bottom faces (true shape, side ${s} mm) on one face, here face BC.</li>`:''}
+ <li>Draw the outline thick and the fold lines thin.</li></ol>`}
+ if(kind==='py'){const th=N*2*Math.asin(s/(2*L))*180/Math.PI;return`<ol>
+ <li>Find the true length of a slant edge: L = √(h² + R²), where R = ${r.toFixed(2)} mm is the distance from the axis to a base corner. L = √(${h}² + ${r.toFixed(2)}²) = <b>${L.toFixed(1)} mm</b>.</li>
+ <li>With O as centre and radius L draw an arc. Starting from A, step off the base edge ${s} mm ${N} times along the arc (A, B, C … A). The angle subtended works out to <b>θ = ${th.toFixed(1)}°</b>.</li>
+ <li>Join the points to each other and to O. Lines OB, OC … are fold lines; OA, OA and the chords form the outline.</li>
+ ${B?`<li>Attach the base (true shape, side ${s} mm) to one chord.</li>`:''}
+ <li>Slant height of each face (O to mid-point of a base edge) = ${slant.toFixed(1)} mm, which is a good check.</li></ol>`}
+ if(kind==='cn'){const th=360*r/L;return`<ol>
+ <li>Find the true length of a generator (slant height): L = √(h² + r²) = √(${h}² + ${r}²) = <b>${L.toFixed(1)} mm</b>.</li>
+ <li>Sector angle θ = 360° × r / L = 360 × ${r} / ${L.toFixed(1)} = <b>${th.toFixed(1)}°</b>.</li>
+ <li>With O as centre and radius L draw an arc subtending θ. Divide it into 12 equal parts (1, 2 … 12, 1) and join them to O; these are the generators.</li>
+ ${B?`<li>Attach the base circle (Ø${S.D} mm) touching the arc.</li>`:''}
+ <li>Check: arc length = πD = ${(Math.PI*S.D).toFixed(1)} mm.</li></ol>`}
+ if(kind==='te'){return`<ol>
+ <li>All four faces of a tetrahedron are equilateral triangles of side a = ${s} mm, so the complete development is one large equilateral triangle of side 2a = <b>${2*s} mm</b>.</li>
+ <li>Join the mid-points A, B, C of its sides. Triangle ABC is the base; the three corner triangles are the slant faces, whose apex O appears at all three corners.</li>
+ <li>AB, BC and CA are fold lines (thin); the outer triangle is the outline (thick).</li>
+ <li>Height of the tetrahedron = a√(2/3) = ${h.toFixed(1)} mm (not needed for the development).</li></ol>`}
+ const w=Math.PI*2*r;return`<ol>
+ <li>Draw a rectangle of length = circumference = πD = π × ${S.D} = <b>${w.toFixed(1)} mm</b> and height = <b>${h} mm</b>.</li>
+ <li>Divide the base circle in the top view into 12 equal parts and the rectangle length into 12 equal parts. Draw the generators 1, 2 … 12, 1.</li>
+ ${B?`<li>Attach the two circular ends (Ø${S.D} mm) touching the long edges.</li>`:''}
+ <li>The generators are thin construction lines; they let you transfer points if the cylinder is cut.</li></ol>`;
+}
+function qtext(){const ty=TY[S.type],h=S.type==='cube'?S.s:S.h;
+ if(ty.k==='cn')return`A cone of base diameter ${S.D} mm and height ${h} mm rests on its base on HP. Draw the development of its ${S.bases?'complete':'lateral'} surface.`;
+ if(ty.k==='te')return`A tetrahedron of ${S.s} mm edge rests on one of its faces on HP. Draw the development of its complete surface.`;
+ if(ty.k==='cy')return`A cylinder of base diameter ${S.D} mm and height ${h} mm rests on its base on HP. Draw the development of its ${S.bases?'complete':'lateral'} surface.`;
+ if(S.type==='cube')return`A cube of ${S.s} mm side rests on HP with a face parallel to VP. Draw the development of its ${S.bases?'complete':'lateral'} surface.`;
+ return`A ${ty.nm} of base edge ${S.s} mm and height ${h} mm rests on its base on HP with a base edge parallel to VP. Draw the development of its ${S.bases?'complete':'lateral'} surface.`}
+
+/* ---------- UI ---------- */
+function render(rebuild=true){
+ if(rebuild)build();
+ document.querySelectorAll('#types button').forEach(b=>b.classList.toggle('on',b.dataset.t===S.type));
+ const k=TY[S.type].k;$('lS').classList.toggle('hide',ROUND(k));$('lD').classList.toggle('hide',!ROUND(k));$('lH').classList.toggle('hide',S.type==='cube'||k==='te');$('lB').classList.toggle('hide',k==='te');$('lSt').textContent=k==='te'||S.type==='cube'?'Edge':'Base edge';
+ $('qtext').textContent=qtext();$('info').innerHTML=info();draw2D();draw3D();
+}
+document.querySelectorAll('#types button').forEach(b=>b.onclick=()=>{S.type=b.dataset.t;S.Z2={k:1,ox:0,oy:0};render()});
+[['s',10,80],['h',10,120],['D',10,100]].forEach(([id,lo,hi])=>$(id).onchange=e=>{const v=+e.target.value;if(!isNaN(v)){S[id]=Math.max(lo,Math.min(hi,v));e.target.value=S[id];render()}});
+$('bases').onchange=e=>{S.bases=e.target.checked;render()};
+$('lbl').onchange=e=>{S.lbl=e.target.checked;draw3D()};
+const setT=v=>{S.t=v;$('t').value=Math.round(v*100);$('tv').textContent=Math.round(v*100)+'%';draw3D()};
+$('t').oninput=e=>setT(e.target.value/100);
+$('op').oninput=e=>{S.op=+e.target.value;$('opv').textContent=S.op+'%';draw3D()};
+let anim=null;
+$('play').onclick=()=>{if(anim){cancelAnimationFrame(anim);anim=null;$('play').textContent=S.t>=.5?'◀ Fold':'▶ Unfold';return}
+ const from=S.t,to=from>=.5?0:1,t0=performance.now();$('play').textContent='■ Stop';
+ const go=now=>{const q=Math.min(1,(now-t0)/2600),e=q<.5?2*q*q:1-Math.pow(-2*q+2,2)/2;setT(from+(to-from)*e);
+  if(q<1)anim=requestAnimationFrame(go);else{anim=null;$('play').textContent=to?'◀ Fold':'▶ Unfold'}};anim=requestAnimationFrame(go)};
+$('vIso').onclick=()=>{S.yaw=-.6;S.pit=.45;draw3D()};$('vFront').onclick=()=>{S.yaw=0;S.pit=0;draw3D()};$('vTop').onclick=()=>{S.yaw=0;S.pit=Math.PI/2;draw3D()};
+$('vNorm').onclick=()=>{const n=G.faces[0].n;S.yaw=0;S.pit=G.kind==='te'?Math.PI/2:Math.atan2(n[2],-n[1]);if(S.t<1)setT(1);else draw3D()};
+$('z3in').onclick=()=>{S.z3=Math.min(6,S.z3*1.25);draw3D()};$('z3out').onclick=()=>{S.z3=Math.max(.3,S.z3*.8);draw3D()};
+$('z2in').onclick=()=>zoom2(1.25);$('z2out').onclick=()=>zoom2(.8);$('z2rst').onclick=()=>{S.Z2={k:1,ox:0,oy:0};draw2D()};
+function zoom2(f,mx,my){const z=S.Z2,cv=$('c2');if(mx==null){mx=cv.clientWidth/2;my=cv.clientHeight/2}const k=Math.max(.3,Math.min(12,z.k*f));f=k/z.k;z.ox=mx-(mx-z.ox)*f;z.oy=my-(my-z.oy)*f;z.k=k;draw2D()}
+['c2','c3'].forEach(id=>{const cv=$(id),pts=new Map();let pinch=null;
+ cv.addEventListener('wheel',e=>{e.preventDefault();const f=Math.exp(-e.deltaY*.0015);if(id==='c2'){const r=cv.getBoundingClientRect();zoom2(f,e.clientX-r.left,e.clientY-r.top)}else{S.z3=Math.max(.3,Math.min(6,S.z3*f));draw3D()}},{passive:false});
+ cv.addEventListener('dblclick',()=>{if(id==='c2'){S.Z2={k:1,ox:0,oy:0};draw2D()}else{S.z3=1;S.yaw=-.6;S.pit=.45;draw3D()}});
+ cv.addEventListener('pointerdown',e=>{cv.setPointerCapture(e.pointerId);pts.set(e.pointerId,[e.clientX,e.clientY]);pinch=null});
+ cv.addEventListener('pointermove',e=>{if(!pts.has(e.pointerId))return;const prev=pts.get(e.pointerId);pts.set(e.pointerId,[e.clientX,e.clientY]);
+  if(pts.size>=2){const[a,b]=[...pts.values()],d=Math.hypot(a[0]-b[0],a[1]-b[1]);if(pinch){const f=d/pinch;if(id==='c2'){const r=cv.getBoundingClientRect();zoom2(f,(a[0]+b[0])/2-r.left,(a[1]+b[1])/2-r.top)}else{S.z3=Math.max(.3,Math.min(6,S.z3*f));draw3D()}}pinch=d;return}
+  const dx=e.clientX-prev[0],dy=e.clientY-prev[1];if(id==='c2'){S.Z2.ox+=dx;S.Z2.oy+=dy;draw2D()}else{S.yaw+=dx*.01;S.pit=Math.max(-1.57,Math.min(1.57,S.pit+dy*.01));draw3D()}});
+ const up=e=>{pts.delete(e.pointerId);pinch=null};cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up)});
+addEventListener('resize',()=>render(false));matchMedia('(prefers-color-scheme:dark)').addEventListener('change',()=>render(false));
+render();
+</script></body></html>
